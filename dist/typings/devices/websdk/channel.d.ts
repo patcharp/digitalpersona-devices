@@ -1,5 +1,5 @@
 import { Request, Response } from './command';
-import 'WebSdk';
+import { WebSdk } from 'WebSdk';
 /**@internal
  *
  */

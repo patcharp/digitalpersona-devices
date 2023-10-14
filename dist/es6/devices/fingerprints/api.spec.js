@@ -1,6 +1,7 @@
 import { __awaiter } from "tslib";
 import { Env } from './../../test';
 import { FingerprintReader } from './reader';
+import { WebSdk } from 'WebSdk';
 describe("FingerprintsApi: ", () => {
     let api;
     beforeEach(() => {

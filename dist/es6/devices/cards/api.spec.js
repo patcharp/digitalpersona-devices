@@ -1,6 +1,7 @@
 import { __awaiter } from "tslib";
 import { CardsReader } from './reader';
 import { Env } from './../../test';
+import { WebSdk } from 'WebSdk';
 describe("CardsReader: ", () => {
     let api;
     beforeEach(() => {

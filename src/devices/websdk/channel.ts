@@ -1,13 +1,11 @@
 import { Base64Url, Utf8 } from '@digitalpersona/core';
 import { Request, Response } from './command';
 import { MessageType, Message } from './messages';
-import 'WebSdk';
-
+import { WebSdk } from 'WebSdk';
 /**@internal
  *
  */
-export class Channel
-{
+export class Channel {
     private webChannel: WebSdk.WebChannelClient;
     private pending: Request[] = [];
 
@@ -29,10 +27,10 @@ export class Channel
                 request.timer = window.setTimeout(() => {
                     if (request.timer) try {
                         request.reject(new Error("Timeout"));
-                    } catch (e){}
+                    } catch (e) { }
                 }, timeout);
             }
-            });
+        });
         this.pending.push(request);
         if (this.webChannel.isConnected())
             this.processRequestQueue();
@@ -50,7 +48,7 @@ export class Channel
         this.pending = [];
         if (this.onCommunicationError) try {
             this.onCommunicationError();
-        } catch (e){}
+        } catch (e) { }
     }
 
     private onDataReceivedTxt(data: string): void {
@@ -75,7 +73,7 @@ export class Channel
             const notification = JSON.parse(Utf8.fromBase64Url(message.Data || ""));
             if (this.onNotification) try {
                 this.onNotification(notification);
-            } catch (e){}
+            } catch (e) { }
         } else
             console.log(`Unknown message type: ${message.Type}`);
     }

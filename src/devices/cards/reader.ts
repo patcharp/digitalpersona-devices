@@ -7,6 +7,7 @@ import { CardsEventSource as CardsEventSource } from './eventSource';
 import { Method, NotificationType, Notification, CardNotification, ReaderList, CardList } from "./messages";
 import { Card } from './cards';
 import { Utf8, Base64Url, Base64, Utf16 } from '@digitalpersona/core';
+import { WebSdk } from 'WebSdk';
 
 /**
  * A card reader API class.
@@ -109,10 +110,10 @@ export class CardsReader
         return this.channel.send(new Request(new Command(
             Method.EnumerateReaders,
         )))
-        .then(response => {
-            const list: ReaderList = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
-            return JSON.parse(list.Readers || "[]");
-        });
+            .then(response => {
+                const list: ReaderList = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
+                return JSON.parse(list.Readers || "[]");
+            });
     }
 
     /** Lists all inserted cards.
@@ -122,11 +123,11 @@ export class CardsReader
         return this.channel.send(new Request(new Command(
             Method.EnumerateCards,
         )))
-        .then(response => {
-            const list: CardList = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
-            const cards: string[] = JSON.parse(list.Cards || "[]");
-            return cards.map(s => JSON.parse(Utf16.fromBase64Url(s)));
-        });
+            .then(response => {
+                const list: CardList = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
+                const cards: string[] = JSON.parse(list.Cards || "[]");
+                return cards.map(s => JSON.parse(Utf16.fromBase64Url(s)));
+            });
     }
 
     /** Reads card data from a specific card.
@@ -135,15 +136,15 @@ export class CardsReader
      * The promise can be fulfilled but return `null` if the card has no information.
      * The promise will be rejected if a card is not found or in case of a reading error.
      */
-    public getCardInfo(reader: string): Promise<Card|null> {
+    public getCardInfo(reader: string): Promise<Card | null> {
         return this.channel.send(new Request(new Command(
             Method.GetCardInfo,
             Base64Url.fromJSON({ Reader: reader }),
         )))
-        .then(response => {
-            const cardInfo: Card = JSON.parse(Utf8.fromBase64Url(response.Data || "null"));
-            return cardInfo;
-        });
+            .then(response => {
+                const cardInfo: Card = JSON.parse(Utf8.fromBase64Url(response.Data || "null"));
+                return cardInfo;
+            });
     }
 
     /** Reads a card unique identifier.
@@ -155,10 +156,10 @@ export class CardsReader
             Method.GetCardUID,
             Base64Url.fromJSON({ Reader: reader }),
         )))
-        .then(response => {
-            const data = Base64.fromBase64Url(response.Data || "");
-            return data;
-        });
+            .then(response => {
+                const data = Base64.fromBase64Url(response.Data || "");
+                return data;
+            });
     }
 
     /** Reads card authentication data.
@@ -172,10 +173,10 @@ export class CardsReader
             Method.GetDPCardAuthData,
             Base64Url.fromJSON({ Reader: reader, PIN: pin || "" }),
         )))
-        .then(response => {
-            const data = JSON.parse(Utf8.fromBase64Url(response.Data || ""));
-            return data;
-        });
+            .then(response => {
+                const data = JSON.parse(Utf8.fromBase64Url(response.Data || ""));
+                return data;
+            });
     }
 
     /** Reads card enrollment data.
@@ -189,10 +190,10 @@ export class CardsReader
             Method.GetDPCardEnrollData,
             Base64Url.fromJSON({ Reader: reader, PIN: pin || "" }),
         )))
-        .then(response => {
-            const data = JSON.parse(Utf8.fromBase64Url(response.Data || ""));
-            return data;
-        });
+            .then(response => {
+                const data = JSON.parse(Utf8.fromBase64Url(response.Data || ""));
+                return data;
+            });
     }
 
     /** Starts listening for card reader events.
@@ -204,7 +205,7 @@ export class CardsReader
             Method.Subscribe,
             reader ? Base64Url.fromJSON({ Reader: reader }) : "",
         )))
-        .then();
+            .then();
     }
 
     /** Stop listening for card reader events.
@@ -216,7 +217,7 @@ export class CardsReader
             Method.Unsubscribe,
             reader ? Base64Url.fromJSON({ Reader: reader }) : "",
         )))
-        .then();
+            .then();
     }
 
     /** Converts WebSdk connectivity error to a card API event. */

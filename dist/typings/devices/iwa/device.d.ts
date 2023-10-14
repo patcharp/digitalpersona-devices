@@ -1,8 +1,8 @@
-/// <reference types="WebSdk" />
 import { Base64UrlString } from '@digitalpersona/core';
 import { AuthenticationData, IAuthenticationClient, AuthenticationHandle } from '@digitalpersona/services';
 import { Handler, MultiCastEventSource } from '../../private';
 import { Event, CommunicationFailed } from '../../common';
+import { WebSdk } from 'WebSdk';
 /**
  * Integrated Windows Authentication API.
  * An instance of this class allows internet browsers to authenticate in DigitalPersona servers

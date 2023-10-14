@@ -1,13 +1,13 @@
 import { CardsReader } from './reader';
 import { Env } from './../../test';
+import { WebSdk } from 'WebSdk';
 
-describe("CardsReader: ", () =>
-{
+describe("CardsReader: ", () => {
     let api: CardsReader;
 
     beforeEach(() => {
         api = new CardsReader(
-            new WebSdk.WebChannelOptions({debug: Env.Trace, reconnectAlways: true }),
+            new WebSdk.WebChannelOptions({ debug: Env.Trace, reconnectAlways: true }),
         );
     });
 

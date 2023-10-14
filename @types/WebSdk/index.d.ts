@@ -1,7 +1,7 @@
 
-declare module WebSdk {
+export declare module WebSdk {
 
-    interface IWebChannelClient {
+    export interface IWebChannelClient {
         /**
         * Callback invoked when client cannot connect to the server (because has no data in local storage or this data is obsolete).
         */
@@ -30,7 +30,7 @@ declare module WebSdk {
         * Connects to the server with available configuration. If connection failed, onConnectionFailed callback will be called.
         */
         connect: () => void;
-        
+
         /**
         * Dicconnects from the server or stops attempts to restore lost connection.
         */
@@ -56,7 +56,7 @@ declare module WebSdk {
         isConnected(): boolean;
     }
 
-    class WebChannelOptions {
+    export class WebChannelOptions {
         constructor(options: Object);
 
         /*
@@ -78,7 +78,7 @@ declare module WebSdk {
         reconnectAlways(value: boolean): void;
     }
 
-    class WebChannelClient implements IWebChannelClient {
+    export class WebChannelClient implements IWebChannelClient {
         /**
         * Creates WebChannelClient
         * 
@@ -95,7 +95,7 @@ declare module WebSdk {
         onDataReceivedTxt(data: string): void;
 
         connect(): void;
-        
+
         disconnect(): void;
 
         sendDataBin(data: ArrayBuffer): void;

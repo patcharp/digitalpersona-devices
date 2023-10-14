@@ -1,10 +1,10 @@
-/// <reference types="WebSdk" />
 import { Handler, MultiCastEventSource } from '../../private';
 import { Event, CommunicationFailed } from '../../common';
 import { DeviceConnected, DeviceDisconnected } from '../events';
 import { ErrorOccurred, SamplesAcquired, QualityReported, AcquisitionStarted, AcquisitionStopped } from './events';
 import { DeviceInfo } from './device';
 import { SampleFormat } from './sample';
+import { WebSdk } from 'WebSdk';
 /**
  * A fingerprint reader API.
  * An instance of this class allows to subscribe to finerprint reader events and read fingerprint data.

@@ -1,13 +1,13 @@
 import { Env } from './../../test';
 import { FingerprintReader } from './reader';
+import { WebSdk } from 'WebSdk';
 
-describe("FingerprintsApi: ", () =>
-{
+describe("FingerprintsApi: ", () => {
     let api: FingerprintReader;
 
     beforeEach(() => {
         api = new FingerprintReader(
-            new WebSdk.WebChannelOptions({debug: Env.Trace, reconnectAlways: true }),
+            new WebSdk.WebChannelOptions({ debug: Env.Trace, reconnectAlways: true }),
         );
     });
 

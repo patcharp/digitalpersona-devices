@@ -5,6 +5,7 @@ import { Command, Request, Channel } from '../websdk';
 import { Event, CommunicationEventSource, CommunicationFailed } from '../../common';
 import { Method } from './messages';
 import { IWAData } from './data';
+import { WebSdk } from 'WebSdk';
 
 /**
  * Integrated Windows Authentication API.
@@ -75,22 +76,22 @@ export class WindowsAuthClient
         return this.channel.send(new Request(new Command(
             Method.Init,
         )), 3000)
-        .then(response => {
-            const data: IWAData = JSON.parse(response.Data || "{}");
-            return { handle: data.Handle, data: data.Data };
-        });
+            .then(response => {
+                const data: IWAData = JSON.parse(response.Data || "{}");
+                return { handle: data.Handle, data: data.Data };
+            });
     }
 
     /** Used internally. Do not call this method. */
     public continue(handle: AuthenticationHandle, data: string): Promise<Base64UrlString> {
         return this.channel.send(new Request(new Command(
             Method.Continue,
-            JSON.stringify({ Handle: handle, Data: data}),
+            JSON.stringify({ Handle: handle, Data: data }),
         )))
-        .then(response => {
-            const d: IWAData = JSON.parse(response.Data || "{}");
-            return d.Data;
-        });
+            .then(response => {
+                const d: IWAData = JSON.parse(response.Data || "{}");
+                return d.Data;
+            });
     }
 
     /** Used internally. Do not call this method. */
@@ -99,7 +100,7 @@ export class WindowsAuthClient
             Method.Term,
             JSON.stringify({ Handle: handle }),
         )))
-        .then();
+            .then();
     }
 
     /** Converts WebSdk connectivity error to an IWA API event. */

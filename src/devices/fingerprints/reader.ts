@@ -3,17 +3,19 @@ import { Handler, MultiCastEventSource } from '../../private';
 import { Command, Request, Channel } from '../websdk';
 import { Event, CommunicationFailed, CommunicationEventSource } from '../../common';
 import { DeviceConnected, DeviceDisconnected, DeviceEventSource } from '../events';
-import { ErrorOccurred,
+import {
+    ErrorOccurred,
     SamplesAcquired, QualityReported,
     AcquisitionStarted, AcquisitionStopped,
 } from './events';
 import { FingerprintsEventSource } from './eventSource';
 import {
     Method, NotificationType, Notification, EnumerateDevicesResponse,
-    Completed, Error, Quality } from './messages';
+    Completed, Error, Quality
+} from './messages';
 import { DeviceInfo } from './device';
 import { SampleFormat } from './sample';
-
+import { WebSdk } from 'WebSdk';
 /**
  * A fingerprint reader API.
  * An instance of this class allows to subscribe to finerprint reader events and read fingerprint data.
@@ -142,11 +144,11 @@ export class FingerprintReader
         return this.channel.send(new Request(new Command(
             Method.EnumerateDevices,
         )))
-        .then(response => {
-            if (!response) return [];
-            const deviceList: EnumerateDevicesResponse = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
-            return JSON.parse(deviceList.DeviceIDs || "[]");
-        });
+            .then(response => {
+                if (!response) return [];
+                const deviceList: EnumerateDevicesResponse = JSON.parse(Utf8.fromBase64Url(response.Data || "{}"));
+                return JSON.parse(deviceList.DeviceIDs || "[]");
+            });
     }
 
     /** Reads a fingerprint reader device information.
@@ -155,15 +157,15 @@ export class FingerprintReader
      * The promise can be fulfilled but return `null` if the reader provides no information.
      * The promise will be rejected if a reader is not found or in case of a reading error.
      */
-    public getDeviceInfo(deviceUid: string): Promise<DeviceInfo|null> {
+    public getDeviceInfo(deviceUid: string): Promise<DeviceInfo | null> {
         return this.channel.send(new Request(new Command(
             Method.GetDeviceInfo,
             Base64Url.fromJSON({ DeviceID: deviceUid }),
         )))
-        .then(response => {
-            const deviceInfo: DeviceInfo = JSON.parse(Utf8.fromBase64Url(response.Data || "null"));
-            return deviceInfo;
-        });
+            .then(response => {
+                const deviceInfo: DeviceInfo = JSON.parse(Utf8.fromBase64Url(response.Data || "null"));
+                return deviceInfo;
+            });
     }
 
     /** Activate a fingerprint acquisition mode.
@@ -180,7 +182,7 @@ export class FingerprintReader
                 SampleType: sampleFormat,
             }),
         )))
-        .then();
+            .then();
     }
 
     /** Deactivates a fingerprint acquisition mode.
@@ -194,7 +196,7 @@ export class FingerprintReader
                 DeviceID: deviceUid ? deviceUid : "00000000-0000-0000-0000-000000000000",
             }),
         )))
-        .then();
+            .then();
     }
 
     /** Converts WebSdk connectivity error to a fingerprint API event. */
@@ -218,7 +220,7 @@ export class FingerprintReader
             case NotificationType.Quality:
                 const quality: Quality = JSON.parse(Utf8.fromBase64Url(notification.Data || ""));
                 return this.emit(new QualityReported(notification.Device, quality.Quality));
-            case NotificationType.Stopped :
+            case NotificationType.Stopped:
                 return this.emit(new AcquisitionStopped(notification.Device));
             case NotificationType.Started:
                 return this.emit(new AcquisitionStarted(notification.Device));
