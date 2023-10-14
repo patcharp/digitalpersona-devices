@@ -5,11 +5,11 @@ export var SampleFormat;
 (function (SampleFormat) {
     /** A raw fingerprint image (bitmap). */
     SampleFormat[SampleFormat["Raw"] = 1] = "Raw";
-    /** A fingerprint image encoded into an intermediate format. */
+    /** A fingerprint feature set in a DigitalPersona proprietary format. To use with DigitalPersona fingerprint matching engine only. */
     SampleFormat[SampleFormat["Intermediate"] = 2] = "Intermediate";
-    /** A compressed fingerprint image (e.q. JPEG2000, WSQ). */
+    /** A fingerprint image compressed using Wavelet Scalar Quantization (WSQ) algotithm. */
     SampleFormat[SampleFormat["Compressed"] = 3] = "Compressed";
-    /** A Portable Network Graphics (PNG) format. */
+    /** A fingerprint image in a Portable Network Graphics (PNG) format. */
     SampleFormat[SampleFormat["PngImage"] = 5] = "PngImage";
 })(SampleFormat || (SampleFormat = {}));
 /**

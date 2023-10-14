@@ -20,12 +20,12 @@ export default {
     output: {
         format,
         extend: true,
-        name: npm_package_globalObject,
+        name: 'dp.devices',
         globals: {
             '@digitalpersona/core': 'dp.core',
             '@digitalpersona/services': 'dp.services',
             'WebSdk': 'WebSdk',
-          },
+        },
         file: `dist/${target}.bundles/index.${format}${minify ? '.min' : ''}.js`,
         sourcemap: true
     },
