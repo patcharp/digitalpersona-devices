@@ -5,10 +5,10 @@
  * Copyright 2010-2014 Caolan McMahon
  * Released under the MIT license
  */
-;(function () {
+; (function () {
 
     var async = {};
-    function noop() {}
+    function noop() { }
     function identity(v) {
         return v;
     }
@@ -26,8 +26,8 @@
     // on the server, or `this` in some virtual machines. We use `self`
     // instead of `window` for `WebWorker` support.
     var root = typeof self === 'object' && self.self === self && self ||
-            typeof global === 'object' && global.global === global && global ||
-            this;
+        typeof global === 'object' && global.global === global && global ||
+        this;
 
     if (root != null) {
         previous_async = root.async;
@@ -39,7 +39,7 @@
     };
 
     function only_once(fn) {
-        return function() {
+        return function () {
             if (fn === null) throw new Error("Callback was already called.");
             fn.apply(this, arguments);
             fn = null;
@@ -47,7 +47,7 @@
     }
 
     function _once(fn) {
-        return function() {
+        return function () {
             if (fn === null) return;
             fn.apply(this, arguments);
             fn = null;
@@ -63,7 +63,7 @@
     };
 
     // Ported from underscore.js isObject
-    var _isObject = function(obj) {
+    var _isObject = function (obj) {
         var type = typeof obj;
         return type === 'function' || type === 'object' && !!obj;
     };
@@ -156,7 +156,7 @@
     // From underscore.js (https://github.com/jashkenas/underscore/pull/2140).
     function _restParam(func, startIndex) {
         startIndex = startIndex == null ? func.length - 1 : +startIndex;
-        return function() {
+        return function () {
             var length = Math.max(arguments.length - startIndex, 0);
             var rest = Array(length);
             for (var index = 0; index < length; index++) {
@@ -189,11 +189,11 @@
     // capture the global reference to guard against fakeTimer mocks
     var _setImmediate = typeof setImmediate === 'function' && setImmediate;
 
-    var _delay = _setImmediate ? function(fn) {
+    var _delay = _setImmediate ? function (fn) {
         // not a direct alias for IE10 compatibility
         _setImmediate(fn);
-    } : function(fn) {
-        setTimeout(function() {
+    } : function (fn) {
+        setTimeout(function () {
             fn();
         }, 0);
     };
@@ -207,88 +207,88 @@
 
 
     async.forEach =
-    async.each = function (arr, iterator, callback) {
-        return async.eachOf(arr, _withoutIndex(iterator), callback);
-    };
+        async.each = function (arr, iterator, callback) {
+            return async.eachOf(arr, _withoutIndex(iterator), callback);
+        };
 
     async.forEachSeries =
-    async.eachSeries = function (arr, iterator, callback) {
-        return async.eachOfSeries(arr, _withoutIndex(iterator), callback);
-    };
+        async.eachSeries = function (arr, iterator, callback) {
+            return async.eachOfSeries(arr, _withoutIndex(iterator), callback);
+        };
 
 
     async.forEachLimit =
-    async.eachLimit = function (arr, limit, iterator, callback) {
-        return _eachOfLimit(limit)(arr, _withoutIndex(iterator), callback);
-    };
+        async.eachLimit = function (arr, limit, iterator, callback) {
+            return _eachOfLimit(limit)(arr, _withoutIndex(iterator), callback);
+        };
 
     async.forEachOf =
-    async.eachOf = function (object, iterator, callback) {
-        callback = _once(callback || noop);
-        object = object || [];
+        async.eachOf = function (object, iterator, callback) {
+            callback = _once(callback || noop);
+            object = object || [];
 
-        var iter = _keyIterator(object);
-        var key, completed = 0;
+            var iter = _keyIterator(object);
+            var key, completed = 0;
 
-        while ((key = iter()) != null) {
-            completed += 1;
-            iterator(object[key], key, only_once(done));
-        }
-
-        if (completed === 0) callback(null);
-
-        function done(err) {
-            completed--;
-            if (err) {
-                callback(err);
+            while ((key = iter()) != null) {
+                completed += 1;
+                iterator(object[key], key, only_once(done));
             }
-            // Check key is null in case iterator isn't exhausted
-            // and done resolved synchronously.
-            else if (key === null && completed <= 0) {
-                callback(null);
-            }
-        }
-    };
 
-    async.forEachOfSeries =
-    async.eachOfSeries = function (obj, iterator, callback) {
-        callback = _once(callback || noop);
-        obj = obj || [];
-        var nextKey = _keyIterator(obj);
-        var key = nextKey();
-        function iterate() {
-            var sync = true;
-            if (key === null) {
-                return callback(null);
-            }
-            iterator(obj[key], key, only_once(function (err) {
+            if (completed === 0) callback(null);
+
+            function done(err) {
+                completed--;
                 if (err) {
                     callback(err);
                 }
-                else {
-                    key = nextKey();
-                    if (key === null) {
-                        return callback(null);
-                    } else {
-                        if (sync) {
-                            async.setImmediate(iterate);
+                // Check key is null in case iterator isn't exhausted
+                // and done resolved synchronously.
+                else if (key === null && completed <= 0) {
+                    callback(null);
+                }
+            }
+        };
+
+    async.forEachOfSeries =
+        async.eachOfSeries = function (obj, iterator, callback) {
+            callback = _once(callback || noop);
+            obj = obj || [];
+            var nextKey = _keyIterator(obj);
+            var key = nextKey();
+            function iterate() {
+                var sync = true;
+                if (key === null) {
+                    return callback(null);
+                }
+                iterator(obj[key], key, only_once(function (err) {
+                    if (err) {
+                        callback(err);
+                    }
+                    else {
+                        key = nextKey();
+                        if (key === null) {
+                            return callback(null);
                         } else {
-                            iterate();
+                            if (sync) {
+                                async.setImmediate(iterate);
+                            } else {
+                                iterate();
+                            }
                         }
                     }
-                }
-            }));
-            sync = false;
-        }
-        iterate();
-    };
+                }));
+                sync = false;
+            }
+            iterate();
+        };
 
 
 
     async.forEachOfLimit =
-    async.eachOfLimit = function (obj, limit, iterator, callback) {
-        _eachOfLimit(limit)(obj, iterator, callback);
-    };
+        async.eachOfLimit = function (obj, limit, iterator, callback) {
+            _eachOfLimit(limit)(obj, iterator, callback);
+        };
 
     function _eachOfLimit(limit) {
 
@@ -303,7 +303,7 @@
             var running = 0;
             var errored = false;
 
-            (function replenish () {
+            (function replenish() {
                 if (done && running <= 0) {
                     return callback(null);
                 }
@@ -371,23 +371,23 @@
     // reduce only has a series version, as doing reduce in parallel won't
     // work in many situations.
     async.inject =
-    async.foldl =
-    async.reduce = function (arr, memo, iterator, callback) {
-        async.eachOfSeries(arr, function (x, i, callback) {
-            iterator(memo, x, function (err, v) {
-                memo = v;
-                callback(err);
+        async.foldl =
+        async.reduce = function (arr, memo, iterator, callback) {
+            async.eachOfSeries(arr, function (x, i, callback) {
+                iterator(memo, x, function (err, v) {
+                    memo = v;
+                    callback(err);
+                });
+            }, function (err) {
+                callback(err, memo);
             });
-        }, function (err) {
-            callback(err, memo);
-        });
-    };
+        };
 
     async.foldr =
-    async.reduceRight = function (arr, memo, iterator, callback) {
-        var reversed = _map(arr, identity).reverse();
-        async.reduce(reversed, memo, iterator, callback);
-    };
+        async.reduceRight = function (arr, memo, iterator, callback) {
+            var reversed = _map(arr, identity).reverse();
+            async.reduce(reversed, memo, iterator, callback);
+        };
 
     async.transform = function (arr, memo, iterator, callback) {
         if (arguments.length === 3) {
@@ -396,9 +396,9 @@
             memo = _isArray(arr) ? [] : {};
         }
 
-        async.eachOf(arr, function(v, k, cb) {
+        async.eachOf(arr, function (v, k, cb) {
             iterator(memo, v, k, cb);
-        }, function(err) {
+        }, function (err) {
             callback(err, memo);
         });
     };
@@ -408,7 +408,7 @@
         eachfn(arr, function (x, index, callback) {
             iterator(x, function (v) {
                 if (v) {
-                    results.push({index: index, value: x});
+                    results.push({ index: index, value: x });
                 }
                 callback();
             });
@@ -422,17 +422,17 @@
     }
 
     async.select =
-    async.filter = doParallel(_filter);
+        async.filter = doParallel(_filter);
 
     async.selectLimit =
-    async.filterLimit = doParallelLimit(_filter);
+        async.filterLimit = doParallelLimit(_filter);
 
     async.selectSeries =
-    async.filterSeries = doSeries(_filter);
+        async.filterSeries = doSeries(_filter);
 
     function _reject(eachfn, arr, iterator, callback) {
-        _filter(eachfn, arr, function(value, cb) {
-            iterator(value, function(v) {
+        _filter(eachfn, arr, function (value, cb) {
+            iterator(value, function (v) {
                 cb(!v);
             });
         }, callback);
@@ -442,7 +442,7 @@
     async.rejectSeries = doSeries(_reject);
 
     function _createTester(eachfn, check, getResult) {
-        return function(arr, limit, iterator, cb) {
+        return function (arr, limit, iterator, cb) {
             function done() {
                 if (cb) cb(getResult(false, void 0));
             }
@@ -467,12 +467,12 @@
     }
 
     async.any =
-    async.some = _createTester(async.eachOf, toBool, identity);
+        async.some = _createTester(async.eachOf, toBool, identity);
 
     async.someLimit = _createTester(async.eachOfLimit, toBool, identity);
 
     async.all =
-    async.every = _createTester(async.eachOf, notId, notId);
+        async.every = _createTester(async.eachOf, notId, notId);
 
     async.everyLimit = _createTester(async.eachOfLimit, notId, notId);
 
@@ -490,7 +490,7 @@
                     callback(err);
                 }
                 else {
-                    callback(null, {value: x, criteria: criteria});
+                    callback(null, { value: x, criteria: criteria });
                 }
             });
         }, function (err, results) {
@@ -552,15 +552,15 @@
         });
 
         _arrayEach(keys, function (k) {
-            var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
-            var taskCallback = _restParam(function(err, args) {
+            var task = _isArray(tasks[k]) ? tasks[k] : [tasks[k]];
+            var taskCallback = _restParam(function (err, args) {
                 runningTasks--;
                 if (args.length <= 1) {
                     args = args[0];
                 }
                 if (err) {
                     var safeResults = {};
-                    _forEachOf(results, function(val, rkey) {
+                    _forEachOf(results, function (val, rkey) {
                         safeResults[rkey] = val;
                     });
                     safeResults[k] = args;
@@ -607,7 +607,7 @@
 
 
 
-    async.retry = function(times, task, callback) {
+    async.retry = function (times, task, callback) {
         var DEFAULT_TIMES = 5;
         var DEFAULT_INTERVAL = 0;
 
@@ -618,10 +618,10 @@
             interval: DEFAULT_INTERVAL
         };
 
-        function parseTimes(acc, t){
-            if(typeof t === 'number'){
+        function parseTimes(acc, t) {
+            if (typeof t === 'number') {
                 acc.times = parseInt(t, 10) || DEFAULT_TIMES;
-            } else if(typeof t === 'object'){
+            } else if (typeof t === 'object') {
                 acc.times = parseInt(t.times, 10) || DEFAULT_TIMES;
                 acc.interval = parseInt(t.interval, 10) || DEFAULT_INTERVAL;
             } else {
@@ -644,16 +644,16 @@
 
         function wrappedTask(wrappedCallback, wrappedResults) {
             function retryAttempt(task, finalAttempt) {
-                return function(seriesCallback) {
-                    task(function(err, result){
-                        seriesCallback(!err || finalAttempt, {err: err, result: result});
+                return function (seriesCallback) {
+                    task(function (err, result) {
+                        seriesCallback(!err || finalAttempt, { err: err, result: result });
                     }, wrappedResults);
                 };
             }
 
-            function retryInterval(interval){
-                return function(seriesCallback){
-                    setTimeout(function(){
+            function retryInterval(interval) {
+                return function (seriesCallback) {
+                    setTimeout(function () {
                         seriesCallback(null);
                     }, interval);
                 };
@@ -661,14 +661,14 @@
 
             while (opts.times) {
 
-                var finalAttempt = !(opts.times-=1);
+                var finalAttempt = !(opts.times -= 1);
                 attempts.push(retryAttempt(opts.task, finalAttempt));
-                if(!finalAttempt && opts.interval > 0){
+                if (!finalAttempt && opts.interval > 0) {
                     attempts.push(retryInterval(opts.interval));
                 }
             }
 
-            async.series(attempts, function(done, data){
+            async.series(attempts, function (done, data) {
                 data = data[data.length - 1];
                 (wrappedCallback || opts.callback)(data.err, data.result);
             });
@@ -728,11 +728,11 @@
         _parallel(async.eachOf, tasks, callback);
     };
 
-    async.parallelLimit = function(tasks, limit, callback) {
+    async.parallelLimit = function (tasks, limit, callback) {
         _parallel(_eachOfLimit(limit), tasks, callback);
     };
 
-    async.series = function(tasks, callback) {
+    async.series = function (tasks, callback) {
         _parallel(async.eachOfSeries, tasks, callback);
     };
 
@@ -745,7 +745,7 @@
                 return fn.next();
             }
             fn.next = function () {
-                return (index < tasks.length - 1) ? makeCallback(index + 1): null;
+                return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
             };
             return fn;
         }
@@ -777,7 +777,7 @@
     async.whilst = function (test, iterator, callback) {
         callback = callback || noop;
         if (test()) {
-            var next = _restParam(function(err, args) {
+            var next = _restParam(function (err, args) {
                 if (err) {
                     callback(err);
                 } else if (test.apply(this, args)) {
@@ -794,19 +794,19 @@
 
     async.doWhilst = function (iterator, test, callback) {
         var calls = 0;
-        return async.whilst(function() {
+        return async.whilst(function () {
             return ++calls <= 1 || test.apply(this, arguments);
         }, iterator, callback);
     };
 
     async.until = function (test, iterator, callback) {
-        return async.whilst(function() {
+        return async.whilst(function () {
             return !test.apply(this, arguments);
         }, iterator, callback);
     };
 
     async.doUntil = function (iterator, test, callback) {
-        return async.doWhilst(iterator, function() {
+        return async.doWhilst(iterator, function () {
             return !test.apply(this, arguments);
         }, callback);
     };
@@ -814,7 +814,7 @@
     async.during = function (test, iterator, callback) {
         callback = callback || noop;
 
-        var next = _restParam(function(err, args) {
+        var next = _restParam(function (err, args) {
             if (err) {
                 callback(err);
             } else {
@@ -823,7 +823,7 @@
             }
         });
 
-        var check = function(err, truth) {
+        var check = function (err, truth) {
             if (err) {
                 callback(err);
             } else if (truth) {
@@ -838,7 +838,7 @@
 
     async.doDuring = function (iterator, test, callback) {
         var calls = 0;
-        async.during(function(next) {
+        async.during(function (next) {
             if (calls++ < 1) {
                 next(null, true);
             } else {
@@ -851,7 +851,7 @@
         if (concurrency == null) {
             concurrency = 1;
         }
-        else if(concurrency === 0) {
+        else if (concurrency === 0) {
             throw new Error('Concurrency must not be zero');
         }
         function _insert(q, data, pos, callback) {
@@ -862,13 +862,13 @@
             if (!_isArray(data)) {
                 data = [data];
             }
-            if(data.length === 0 && q.idle()) {
+            if (data.length === 0 && q.idle()) {
                 // call drain immediately if there are no tasks
-                return async.setImmediate(function() {
+                return async.setImmediate(function () {
                     q.drain();
                 });
             }
-            _arrayEach(data, function(task) {
+            _arrayEach(data, function (task) {
                 var item = {
                     data: task,
                     callback: callback || noop
@@ -887,7 +887,7 @@
             async.setImmediate(q.process);
         }
         function _next(q, tasks) {
-            return function(){
+            return function () {
                 workers -= 1;
 
                 var removed = false;
@@ -932,7 +932,7 @@
             },
             process: function () {
                 if (!q.paused && workers < q.concurrency && q.tasks.length) {
-                    while(workers < q.concurrency && q.tasks.length){
+                    while (workers < q.concurrency && q.tasks.length) {
                         var tasks = q.payload ?
                             q.tasks.splice(0, q.payload) :
                             q.tasks.splice(0, q.tasks.length);
@@ -960,7 +960,7 @@
             workersList: function () {
                 return workersList;
             },
-            idle: function() {
+            idle: function () {
                 return q.tasks.length + workers === 0;
             },
             pause: function () {
@@ -990,7 +990,7 @@
 
     async.priorityQueue = function (worker, concurrency) {
 
-        function _compareTasks(a, b){
+        function _compareTasks(a, b) {
             return a.priority - b.priority;
         }
 
@@ -1016,13 +1016,13 @@
             if (!_isArray(data)) {
                 data = [data];
             }
-            if(data.length === 0) {
+            if (data.length === 0) {
                 // call drain immediately if there are no tasks
-                return async.setImmediate(function() {
+                return async.setImmediate(function () {
                     q.drain();
                 });
             }
-            _arrayEach(data, function(task) {
+            _arrayEach(data, function (task) {
                 var item = {
                     data: task,
                     priority: priority,
@@ -1147,9 +1147,9 @@
                     cb(err, nextargs);
                 })]));
             },
-            function (err, results) {
-                callback.apply(that, [err].concat(results));
-            });
+                function (err, results) {
+                    callback.apply(that, [err].concat(results));
+                });
         });
     };
 
@@ -1159,14 +1159,14 @@
 
 
     function _applyEach(eachfn) {
-        return _restParam(function(fns, args) {
-            var go = _restParam(function(args) {
+        return _restParam(function (fns, args) {
+            var go = _restParam(function (args) {
                 var that = this;
                 var callback = args.pop();
                 return eachfn(fns, function (fn, _, cb) {
                     fn.apply(that, args.concat([cb]));
                 },
-                callback);
+                    callback);
             });
             if (args.length) {
                 return go.apply(this, args);
@@ -1214,7 +1214,7 @@
 
     async.ensureAsync = ensureAsync;
 
-    async.constant = _restParam(function(values) {
+    async.constant = _restParam(function (values) {
         var args = [null].concat(values);
         return function (callback) {
             return callback.apply(this, args);
@@ -1222,27 +1222,27 @@
     });
 
     async.wrapSync =
-    async.asyncify = function asyncify(func) {
-        return _restParam(function (args) {
-            var callback = args.pop();
-            var result;
-            try {
-                result = func.apply(this, args);
-            } catch (e) {
-                return callback(e);
-            }
-            // if result is Promise object
-            if (_isObject(result) && typeof result.then === "function") {
-                result.then(function(value) {
-                    callback(null, value);
-                })["catch"](function(err) {
-                    callback(err.message ? err : new Error(err));
-                });
-            } else {
-                callback(null, result);
-            }
-        });
-    };
+        async.asyncify = function asyncify(func) {
+            return _restParam(function (args) {
+                var callback = args.pop();
+                var result;
+                try {
+                    result = func.apply(this, args);
+                } catch (e) {
+                    return callback(e);
+                }
+                // if result is Promise object
+                if (_isObject(result) && typeof result.then === "function") {
+                    result.then(function (value) {
+                        callback(null, value);
+                    })["catch"](function (err) {
+                        callback(err.message ? err : new Error(err));
+                    });
+                } else {
+                    callback(null, result);
+                }
+            });
+        };
 
     // Node.js
     if (typeof module === 'object' && module.exports) {
@@ -1261,10 +1261,10 @@
 
 }());
 
-;(function (factory) {
+; (function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define('sha1',[], factory);
+        define('sha1', [], factory);
     } else {
         window.sha1 = factory();
     }
@@ -1279,7 +1279,7 @@
      * Modified by Tom Wu (tjw@cs.stanford.edu) for the
      * SRP JavaScript implementation.
      */
-    var sha1 = function() {
+    var sha1 = function () {
         /*
         * Convert a 32-bit number to a hex string with ms-byte first
         */
@@ -1366,7 +1366,7 @@
              */
         function kt(t) {
             return (t < 20) ? 1518500249 : (t < 40) ? 1859775393 :
-            (t < 60) ? -1894007588 : -899497514;
+                (t < 60) ? -1894007588 : -899497514;
         }
 
         /*
@@ -1448,7 +1448,7 @@
 });
 
 
-;(function (factory) {
+; (function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('sjcl', [], factory);
@@ -1895,11 +1895,11 @@
          */
         _block: function (words) {
             var i, tmp, a, b,
-              w = words.slice(0),
-              h = this._h,
-              k = this._key,
-              h0 = h[0], h1 = h[1], h2 = h[2], h3 = h[3],
-              h4 = h[4], h5 = h[5], h6 = h[6], h7 = h[7];
+                w = words.slice(0),
+                h = this._h,
+                k = this._key,
+                h0 = h[0], h1 = h[1], h2 = h[2], h3 = h[3],
+                h4 = h[4], h5 = h[5], h6 = h[6], h7 = h[7];
 
             /* Rationale for placement of |0 :
              * If a value can overflow is original 32 bits by a factor of more than a few
@@ -1922,8 +1922,8 @@
                     a = w[(i + 1) & 15];
                     b = w[(i + 14) & 15];
                     tmp = w[i & 15] = ((a >>> 7 ^ a >>> 18 ^ a >>> 3 ^ a << 25 ^ a << 14) +
-                                     (b >>> 17 ^ b >>> 19 ^ b >>> 10 ^ b << 15 ^ b << 13) +
-                                     w[i & 15] + w[(i + 9) & 15]) | 0;
+                        (b >>> 17 ^ b >>> 19 ^ b >>> 10 ^ b << 15 ^ b << 13) +
+                        w[i & 15] + w[(i + 9) & 15]) | 0;
                 }
 
                 tmp = (tmp + h7 + (h4 >>> 6 ^ h4 >>> 11 ^ h4 >>> 25 ^ h4 << 26 ^ h4 << 21 ^ h4 << 7) + (h6 ^ h4 & (h5 ^ h6)) + k[i]); // | 0;
@@ -1979,9 +1979,9 @@
         }
 
         var i, j, tmp,
-          encKey, decKey,
-          sbox = this._tables[0][4], decTable = this._tables[1],
-          keyLen = key.length, rcon = 1;
+            encKey, decKey,
+            sbox = this._tables[0][4], decTable = this._tables[1],
+            keyLen = key.length, rcon = 1;
 
         if (keyLen !== 4 && keyLen !== 6 && keyLen !== 8) {
             throw new sjcl.exception.invalid("invalid aes key size");
@@ -2014,9 +2014,9 @@
                 decKey[j] = tmp;
             } else {
                 decKey[j] = decTable[0][sbox[tmp >>> 24]] ^
-                            decTable[1][sbox[tmp >> 16 & 255]] ^
-                            decTable[2][sbox[tmp >> 8 & 255]] ^
-                            decTable[3][sbox[tmp & 255]];
+                    decTable[1][sbox[tmp >> 16 & 255]] ^
+                    decTable[2][sbox[tmp >> 8 & 255]] ^
+                    decTable[3][sbox[tmp & 255]];
             }
         }
     };
@@ -2143,18 +2143,18 @@
             // Last round.
             for (i = 0; i < 4; i++) {
                 out[dir ? 3 & -i : i] =
-                  sbox[a >>> 24] << 24 ^
-                  sbox[b >> 16 & 255] << 16 ^
-                  sbox[c >> 8 & 255] << 8 ^
-                  sbox[d & 255] ^
-                  key[kIndex++];
+                    sbox[a >>> 24] << 24 ^
+                    sbox[b >> 16 & 255] << 16 ^
+                    sbox[c >> 8 & 255] << 8 ^
+                    sbox[d & 255] ^
+                    key[kIndex++];
                 a2 = a; a = b; b = c; c = d; d = a2;
             }
 
             return out;
         }
     };
-    
+
 
     /** @fileOverview Random number generator.
  *
@@ -2280,10 +2280,10 @@
             source = source || "user";
 
             var id,
-              i, tmp,
-              t = (new Date()).valueOf(),
-              robin = this._robins[source],
-              oldReady = this.isReady(), err = 0, objName;
+                i, tmp,
+                t = (new Date()).valueOf(),
+                robin = this._robins[source],
+                oldReady = this.isReady(), err = 0, objName;
 
             id = this._collectorIds[source];
             if (id === undefined) { id = this._collectorIds[source] = this._collectorIdNext++; }
@@ -2372,12 +2372,12 @@
 
             if (this._strength && this._strength >= entropyRequired) {
                 return (this._poolEntropy[0] > this._BITS_PER_RESEED && (new Date()).valueOf() > this._nextReseed) ?
-                  this._REQUIRES_RESEED | this._READY :
-                  this._READY;
+                    this._REQUIRES_RESEED | this._READY :
+                    this._READY;
             } else {
                 return (this._poolStrength >= entropyRequired) ?
-                  this._REQUIRES_RESEED | this._NOT_READY :
-                  this._NOT_READY;
+                    this._REQUIRES_RESEED | this._NOT_READY :
+                    this._NOT_READY;
             }
         },
 
@@ -2389,8 +2389,8 @@
                 return 1.0;
             } else {
                 return (this._poolStrength > entropyRequired) ?
-                  1.0 :
-                  this._poolStrength / entropyRequired;
+                    1.0 :
+                    this._poolStrength / entropyRequired;
             }
         },
 
@@ -2509,7 +2509,7 @@
             var reseedData = [], strength = 0, i;
 
             this._nextReseed = reseedData[0] =
-              (new Date()).valueOf() + this._MILLISECONDS_PER_RESEED;
+                (new Date()).valueOf() + this._MILLISECONDS_PER_RESEED;
 
             for (i = 0; i < 16; i++) {
                 /* On some browsers, this is cryptographically random.  So we might
@@ -2671,7 +2671,7 @@
         }
     }());
 
- 
+
 
     /** @fileOverview Bit array codec implementations.
      *
@@ -2819,31 +2819,31 @@
     return sjcl;
 });
 
-;(function (factory) {
+; (function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('BigInteger', [], factory);
     } else {
         window.BigInteger = factory();
     }
-})(function() {
+})(function () {
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Basic JavaScript BN library - subset useful for RSA encryption. 
- * Copyright (c) 2005  Tom Wu 
- * All Rights Reserved. 
- * See "LICENSE" for details.
- */
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     * Basic JavaScript BN library - subset useful for RSA encryption. 
+     * Copyright (c) 2005  Tom Wu 
+     * All Rights Reserved. 
+     * See "LICENSE" for details.
+     */
 
-// Bits per digit
+    // Bits per digit
     ;
     var dbits;
 
-// JavaScript engine analysis
+    // JavaScript engine analysis
     var canary = 0xdeadbeefcafe;
     var j_lm = ((canary & 0xffffff) == 0xefcafe);
 
-// (public) Constructor
+    // (public) Constructor
     function BigInteger(a, b, c) {
         if (a != null)
             if ("number" == typeof a) this.fromNumber(a, b, c);
@@ -2851,17 +2851,17 @@
             else this.fromString(a, b);
     }
 
-// return new, unset BigInteger
+    // return new, unset BigInteger
     function nbi() { return new BigInteger(null); }
 
-// am: Compute w_j += (x*this_i), propagate carries,
-// c is initial carry, returns final carry.
-// c < 3*dvalue, x < 2*dvalue, this_i < dvalue
-// We need to select the fastest one that works in this environment.
+    // am: Compute w_j += (x*this_i), propagate carries,
+    // c is initial carry, returns final carry.
+    // c < 3*dvalue, x < 2*dvalue, this_i < dvalue
+    // We need to select the fastest one that works in this environment.
 
-// am1: use a single mult and divide to get the high bits,
-// max digit bits should be 26 because
-// max internal value = 2*dvalue^2-2*dvalue (< 2^53)
+    // am1: use a single mult and divide to get the high bits,
+    // max digit bits should be 26 because
+    // max internal value = 2*dvalue^2-2*dvalue (< 2^53)
     function am1(i, x, w, j, c, n) {
         while (--n >= 0) {
             var v = x * this[i++] + w[j] + c;
@@ -2871,9 +2871,9 @@
         return c;
     }
 
-// am2 avoids a big mult-and-extract completely.
-// Max digit bits should be <= 30 because we do bitwise ops
-// on values up to 2*hdvalue^2-hdvalue-1 (< 2^31)
+    // am2 avoids a big mult-and-extract completely.
+    // Max digit bits should be <= 30 because we do bitwise ops
+    // on values up to 2*hdvalue^2-hdvalue-1 (< 2^31)
     function am2(i, x, w, j, c, n) {
         var xl = x & 0x7fff, xh = x >> 15;
         while (--n >= 0) {
@@ -2887,8 +2887,8 @@
         return c;
     }
 
-// Alternately, set max digit bits to 28 since some
-// browsers slow down when dealing with 32-bit numbers.
+    // Alternately, set max digit bits to 28 since some
+    // browsers slow down when dealing with 32-bit numbers.
     function am3(i, x, w, j, c, n) {
         var xl = x & 0x3fff, xh = x >> 14;
         while (--n >= 0) {
@@ -2922,7 +2922,7 @@
     BigInteger.prototype.F1 = BI_FP - dbits;
     BigInteger.prototype.F2 = 2 * dbits - BI_FP;
 
-// Digit conversions
+    // Digit conversions
     var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz";
     var BI_RC = new Array();
     var rr, vv;
@@ -2940,14 +2940,14 @@
         return (c == null) ? -1 : c;
     }
 
-// (protected) copy this to r
+    // (protected) copy this to r
     function bnpCopyTo(r) {
         for (var i = this.t - 1; i >= 0; --i) r[i] = this[i];
         r.t = this.t;
         r.s = this.s;
     }
 
-// (protected) set from integer value x, -DV <= x < DV
+    // (protected) set from integer value x, -DV <= x < DV
     function bnpFromInt(x) {
         this.t = 1;
         this.s = (x < 0) ? -1 : 0;
@@ -2956,14 +2956,14 @@
         else this.t = 0;
     }
 
-// return bigint initialized to value
+    // return bigint initialized to value
     function nbv(i) {
         var r = nbi();
         r.fromInt(i);
         return r;
     }
 
-// (protected) set from string and radix
+    // (protected) set from string and radix
     function bnpFromString(s, b) {
         var k;
         if (b == 16) k = 4;
@@ -3004,13 +3004,13 @@
         if (mi) BigInteger.ZERO.subTo(this, this);
     }
 
-// (protected) clamp off excess high words
+    // (protected) clamp off excess high words
     function bnpClamp() {
         var c = this.s & this.DM;
-        while (this.t > 0 && this[this.t - 1] == c)--this.t;
+        while (this.t > 0 && this[this.t - 1] == c) --this.t;
     }
 
-// (public) return string representation in given radix
+    // (public) return string representation in given radix
     function bnToString(b) {
         if (this.s < 0) return "-" + this.negate().toString(b);
         var k;
@@ -3045,17 +3045,17 @@
         return m ? r : "0";
     }
 
-// (public) -this
+    // (public) -this
     function bnNegate() {
         var r = nbi();
         BigInteger.ZERO.subTo(this, r);
         return r;
     }
 
-// (public) |this|
+    // (public) |this|
     function bnAbs() { return (this.s < 0) ? this.negate() : this; }
 
-// (public) return + if this > a, - if this < a, 0 if equal
+    // (public) return + if this > a, - if this < a, 0 if equal
     function bnCompareTo(a) {
         var r = this.s - a.s;
         if (r != 0) return r;
@@ -3066,7 +3066,7 @@
         return 0;
     }
 
-// returns bit length of the integer x
+    // returns bit length of the integer x
     function nbits(x) {
         var r = 1, t;
         if ((t = x >>> 16) != 0) {
@@ -3092,13 +3092,13 @@
         return r;
     }
 
-// (public) return the number of bits in "this"
+    // (public) return the number of bits in "this"
     function bnBitLength() {
         if (this.t <= 0) return 0;
         return this.DB * (this.t - 1) + nbits(this[this.t - 1] ^ (this.s & this.DM));
     }
 
-// (protected) r = this << n*DB
+    // (protected) r = this << n*DB
     function bnpDLShiftTo(n, r) {
         var i;
         for (i = this.t - 1; i >= 0; --i) r[i + n] = this[i];
@@ -3107,14 +3107,14 @@
         r.s = this.s;
     }
 
-// (protected) r = this >> n*DB
+    // (protected) r = this >> n*DB
     function bnpDRShiftTo(n, r) {
         for (var i = n; i < this.t; ++i) r[i - n] = this[i];
         r.t = Math.max(this.t - n, 0);
         r.s = this.s;
     }
 
-// (protected) r = this << n
+    // (protected) r = this << n
     function bnpLShiftTo(n, r) {
         var bs = n % this.DB;
         var cbs = this.DB - bs;
@@ -3131,7 +3131,7 @@
         r.clamp();
     }
 
-// (protected) r = this >> n
+    // (protected) r = this >> n
     function bnpRShiftTo(n, r) {
         r.s = this.s;
         var ds = Math.floor(n / this.DB);
@@ -3152,7 +3152,7 @@
         r.clamp();
     }
 
-// (protected) r = this - a
+    // (protected) r = this - a
     function bnpSubTo(a, r) {
         var i = 0, c = 0, m = Math.min(a.t, this.t);
         while (i < m) {
@@ -3184,8 +3184,8 @@
         r.clamp();
     }
 
-// (protected) r = this * a, r != this,a (HAC 14.12)
-// "this" should be the larger one if appropriate.
+    // (protected) r = this * a, r != this,a (HAC 14.12)
+    // "this" should be the larger one if appropriate.
     function bnpMultiplyTo(a, r) {
         var x = this.abs(), y = a.abs();
         var i = x.t;
@@ -3197,7 +3197,7 @@
         if (this.s != a.s) BigInteger.ZERO.subTo(r, r);
     }
 
-// (protected) r = this^2, r != this (HAC 14.16)
+    // (protected) r = this^2, r != this (HAC 14.16)
     function bnpSquareTo(r) {
         var x = this.abs();
         var i = r.t = 2 * x.t;
@@ -3214,8 +3214,8 @@
         r.clamp();
     }
 
-// (protected) divide this by m, quotient and remainder to q, r (HAC 14.20)
-// r != q, this != m.  q or r may be null.
+    // (protected) divide this by m, quotient and remainder to q, r (HAC 14.20)
+    // r != q, this != m.  q or r may be null.
     function bnpDivRemTo(m, q, r) {
         var pm = m.abs();
         if (pm.t <= 0) return;
@@ -3268,7 +3268,7 @@
         if (ts < 0) BigInteger.ZERO.subTo(r, r);
     }
 
-// (public) this mod a
+    // (public) this mod a
     function bnMod(a) {
         var r = nbi();
         this.abs().divRemTo(a, null, r);
@@ -3276,7 +3276,7 @@
         return r;
     }
 
-// Modular reduction using "classic" algorithm
+    // Modular reduction using "classic" algorithm
     function Classic(m) { this.m = m; }
 
     function cConvert(x) {
@@ -3304,16 +3304,16 @@
     Classic.prototype.mulTo = cMulTo;
     Classic.prototype.sqrTo = cSqrTo;
 
-// (protected) return "-1/this % 2^DB"; useful for Mont. reduction
-// justification:
-//         xy == 1 (mod m)
-//         xy =  1+km
-//   xy(2-xy) = (1+km)(1-km)
-// x[y(2-xy)] = 1-k^2m^2
-// x[y(2-xy)] == 1 (mod m^2)
-// if y is 1/x mod m, then y(2-xy) is 1/x mod m^2
-// should reduce x and y(2-xy) by m^2 at each step to keep size bounded.
-// JS multiply "overflows" differently from C/C++, so care is needed here.
+    // (protected) return "-1/this % 2^DB"; useful for Mont. reduction
+    // justification:
+    //         xy == 1 (mod m)
+    //         xy =  1+km
+    //   xy(2-xy) = (1+km)(1-km)
+    // x[y(2-xy)] = 1-k^2m^2
+    // x[y(2-xy)] == 1 (mod m^2)
+    // if y is 1/x mod m, then y(2-xy) is 1/x mod m^2
+    // should reduce x and y(2-xy) by m^2 at each step to keep size bounded.
+    // JS multiply "overflows" differently from C/C++, so care is needed here.
     function bnpInvDigit() {
         if (this.t < 1) return 0;
         var x = this[0];
@@ -3329,7 +3329,7 @@
         return (y > 0) ? this.DV - y : -y;
     }
 
-// Montgomery reduction
+    // Montgomery reduction
     function Montgomery(m) {
         this.m = m;
         this.mp = m.invDigit();
@@ -3339,7 +3339,7 @@
         this.mt2 = 2 * m.t;
     }
 
-// xR mod m
+    // xR mod m
     function montConvert(x) {
         var r = nbi();
         x.abs().dlShiftTo(this.m.t, r);
@@ -3348,7 +3348,7 @@
         return r;
     }
 
-// x/R mod m
+    // x/R mod m
     function montRevert(x) {
         var r = nbi();
         x.copyTo(r);
@@ -3356,7 +3356,7 @@
         return r;
     }
 
-// x = x/R mod m (HAC 14.32)
+    // x = x/R mod m (HAC 14.32)
     function montReduce(x) {
         while (x.t <= this.mt2) // pad x so am has enough room later
             x[x.t++] = 0;
@@ -3378,13 +3378,13 @@
         if (x.compareTo(this.m) >= 0) x.subTo(this.m, x);
     }
 
-// r = "x^2/R mod m"; x != r
+    // r = "x^2/R mod m"; x != r
     function montSqrTo(x, r) {
         x.squareTo(r);
         this.reduce(r);
     }
 
-// r = "xy/R mod m"; x,y != r
+    // r = "xy/R mod m"; x,y != r
     function montMulTo(x, y, r) {
         x.multiplyTo(y, r);
         this.reduce(r);
@@ -3396,10 +3396,10 @@
     Montgomery.prototype.mulTo = montMulTo;
     Montgomery.prototype.sqrTo = montSqrTo;
 
-// (protected) true iff this is even
+    // (protected) true iff this is even
     function bnpIsEven() { return ((this.t > 0) ? (this[0] & 1) : this.s) == 0; }
 
-// (protected) this^e, e < 2^32, doing sqr and mul with "r" (HAC 14.79)
+    // (protected) this^e, e < 2^32, doing sqr and mul with "r" (HAC 14.79)
     function bnpExp(e, z) {
         if (e > 0xffffffff || e < 1) return BigInteger.ONE;
         var r = nbi(), r2 = nbi(), g = z.convert(this), i = nbits(e) - 1;
@@ -3416,7 +3416,7 @@
         return z.revert(r);
     }
 
-// (public) this^e % m, 0 <= e < 2^32
+    // (public) this^e % m, 0 <= e < 2^32
     function bnModPowInt(e, m) {
         var z;
         if (e < 256 || m.isEven()) z = new Classic(m);
@@ -3424,7 +3424,7 @@
         return this.exp(e, z);
     }
 
-// protected
+    // protected
     BigInteger.prototype.copyTo = bnpCopyTo;
     BigInteger.prototype.fromInt = bnpFromInt;
     BigInteger.prototype.fromString = bnpFromString;
@@ -3441,7 +3441,7 @@
     BigInteger.prototype.isEven = bnpIsEven;
     BigInteger.prototype.exp = bnpExp;
 
-// public
+    // public
     BigInteger.prototype.toString = bnToString;
     BigInteger.prototype.negate = bnNegate;
     BigInteger.prototype.abs = bnAbs;
@@ -3450,27 +3450,27 @@
     BigInteger.prototype.mod = bnMod;
     BigInteger.prototype.modPowInt = bnModPowInt;
 
-// "constants"
+    // "constants"
     BigInteger.ZERO = nbv(0);
     BigInteger.ONE = nbv(1);
 
-// Copyright (c) 2005-2009  Tom Wu
-// All Rights Reserved.
-// See "LICENSE" for details.
+    // Copyright (c) 2005-2009  Tom Wu
+    // All Rights Reserved.
+    // See "LICENSE" for details.
 
-// Extended JavaScript BN functions, required for RSA private ops.
+    // Extended JavaScript BN functions, required for RSA private ops.
 
-// Version 1.1: new BigInteger("0", 10) returns "proper" zero
-// Version 1.2: square() API, isProbablePrime fix
+    // Version 1.1: new BigInteger("0", 10) returns "proper" zero
+    // Version 1.2: square() API, isProbablePrime fix
 
-// (public)
+    // (public)
     function bnClone() {
         var r = nbi();
         this.copyTo(r);
         return r;
     }
 
-// (public) return value as integer
+    // (public) return value as integer
     function bnIntValue() {
         if (this.s < 0) {
             if (this.t == 1) return this[0] - this.DV;
@@ -3481,23 +3481,23 @@
         return ((this[1] & ((1 << (32 - this.DB)) - 1)) << this.DB) | this[0];
     }
 
-// (public) return value as byte
+    // (public) return value as byte
     function bnByteValue() { return (this.t == 0) ? this.s : (this[0] << 24) >> 24; }
 
-// (public) return value as short (assumes DB>=16)
+    // (public) return value as short (assumes DB>=16)
     function bnShortValue() { return (this.t == 0) ? this.s : (this[0] << 16) >> 16; }
 
-// (protected) return x s.t. r^x < DV
+    // (protected) return x s.t. r^x < DV
     function bnpChunkSize(r) { return Math.floor(Math.LN2 * this.DB / Math.log(r)); }
 
-// (public) 0 if this == 0, 1 if this > 0
+    // (public) 0 if this == 0, 1 if this > 0
     function bnSigNum() {
         if (this.s < 0) return -1;
         else if (this.t <= 0 || (this.t == 1 && this[0] <= 0)) return 0;
         else return 1;
     }
 
-// (protected) convert to radix string
+    // (protected) convert to radix string
     function bnpToRadix(b) {
         if (b == null) b = 10;
         if (this.signum() == 0 || b < 2 || b > 36) return "0";
@@ -3512,7 +3512,7 @@
         return z.intValue().toString(b) + r;
     }
 
-// (protected) convert from radix string
+    // (protected) convert from radix string
     function bnpFromRadix(s, b) {
         this.fromInt(0);
         if (b == null) b = 10;
@@ -3539,7 +3539,7 @@
         if (mi) BigInteger.ZERO.subTo(this, this);
     }
 
-// (protected) alternate constructor
+    // (protected) alternate constructor
     function bnpFromNumber(a, b, c) {
         if ("number" == typeof b) {
             // new BigInteger(int,int,RNG)
@@ -3565,7 +3565,7 @@
         }
     }
 
-// (public) convert to bigendian byte array
+    // (public) convert to bigendian byte array
     function bnToByteArray() {
         var i = this.t, r = new Array();
         r[0] = this.s;
@@ -3585,7 +3585,7 @@
                     }
                 }
                 if ((d & 0x80) != 0) d |= -256;
-                if (k == 0 && (this.s & 0x80) != (d & 0x80))++k;
+                if (k == 0 && (this.s & 0x80) != (d & 0x80)) ++k;
                 if (k > 0 || d != this.s) r[k++] = d;
             }
         }
@@ -3598,7 +3598,7 @@
 
     function bnMax(a) { return (this.compareTo(a) > 0) ? this : a; }
 
-// (protected) r = this op a (bitwise)
+    // (protected) r = this op a (bitwise)
     function bnpBitwiseTo(a, op, r) {
         var i, f, m = Math.min(a.t, this.t);
         for (i = 0; i < m; ++i) r[i] = op(this[i], a[i]);
@@ -3615,7 +3615,7 @@
         r.clamp();
     }
 
-// (public) this & a
+    // (public) this & a
     function op_and(x, y) { return x & y; }
 
     function bnAnd(a) {
@@ -3624,7 +3624,7 @@
         return r;
     }
 
-// (public) this | a
+    // (public) this | a
     function op_or(x, y) { return x | y; }
 
     function bnOr(a) {
@@ -3633,7 +3633,7 @@
         return r;
     }
 
-// (public) this ^ a
+    // (public) this ^ a
     function op_xor(x, y) { return x ^ y; }
 
     function bnXor(a) {
@@ -3642,7 +3642,7 @@
         return r;
     }
 
-// (public) this & ~a
+    // (public) this & ~a
     function op_andnot(x, y) { return x & ~y; }
 
     function bnAndNot(a) {
@@ -3651,7 +3651,7 @@
         return r;
     }
 
-// (public) ~this
+    // (public) ~this
     function bnNot() {
         var r = nbi();
         for (var i = 0; i < this.t; ++i) r[i] = this.DM & ~this[i];
@@ -3660,7 +3660,7 @@
         return r;
     }
 
-// (public) this << n
+    // (public) this << n
     function bnShiftLeft(n) {
         var r = nbi();
         if (n < 0) this.rShiftTo(-n, r);
@@ -3668,7 +3668,7 @@
         return r;
     }
 
-// (public) this >> n
+    // (public) this >> n
     function bnShiftRight(n) {
         var r = nbi();
         if (n < 0) this.lShiftTo(-n, r);
@@ -3676,7 +3676,7 @@
         return r;
     }
 
-// return index of lowest 1-bit in x, x < 2^31
+    // return index of lowest 1-bit in x, x < 2^31
     function lbit(x) {
         if (x == 0) return -1;
         var r = 0;
@@ -3696,11 +3696,11 @@
             x >>= 2;
             r += 2;
         }
-        if ((x & 1) == 0)++r;
+        if ((x & 1) == 0) ++r;
         return r;
     }
 
-// (public) returns index of lowest 1-bit (or -1 if none)
+    // (public) returns index of lowest 1-bit (or -1 if none)
     function bnGetLowestSetBit() {
         for (var i = 0; i < this.t; ++i)
             if (this[i] != 0) return i * this.DB + lbit(this[i]);
@@ -3708,7 +3708,7 @@
         return -1;
     }
 
-// return number of 1 bits in x
+    // return number of 1 bits in x
     function cbit(x) {
         var r = 0;
         while (x != 0) {
@@ -3718,37 +3718,37 @@
         return r;
     }
 
-// (public) return number of set bits
+    // (public) return number of set bits
     function bnBitCount() {
         var r = 0, x = this.s & this.DM;
         for (var i = 0; i < this.t; ++i) r += cbit(this[i] ^ x);
         return r;
     }
 
-// (public) true iff nth bit is set
+    // (public) true iff nth bit is set
     function bnTestBit(n) {
         var j = Math.floor(n / this.DB);
         if (j >= this.t) return (this.s != 0);
         return ((this[j] & (1 << (n % this.DB))) != 0);
     }
 
-// (protected) this op (1<<n)
+    // (protected) this op (1<<n)
     function bnpChangeBit(n, op) {
         var r = BigInteger.ONE.shiftLeft(n);
         this.bitwiseTo(r, op, r);
         return r;
     }
 
-// (public) this | (1<<n)
+    // (public) this | (1<<n)
     function bnSetBit(n) { return this.changeBit(n, op_or); }
 
-// (public) this & ~(1<<n)
+    // (public) this & ~(1<<n)
     function bnClearBit(n) { return this.changeBit(n, op_andnot); }
 
-// (public) this ^ (1<<n)
+    // (public) this ^ (1<<n)
     function bnFlipBit(n) { return this.changeBit(n, op_xor); }
 
-// (protected) r = this + a
+    // (protected) r = this + a
     function bnpAddTo(a, r) {
         var i = 0, c = 0, m = Math.min(a.t, this.t);
         while (i < m) {
@@ -3780,63 +3780,63 @@
         r.clamp();
     }
 
-// (public) this + a
+    // (public) this + a
     function bnAdd(a) {
         var r = nbi();
         this.addTo(a, r);
         return r;
     }
 
-// (public) this - a
+    // (public) this - a
     function bnSubtract(a) {
         var r = nbi();
         this.subTo(a, r);
         return r;
     }
 
-// (public) this * a
+    // (public) this * a
     function bnMultiply(a) {
         var r = nbi();
         this.multiplyTo(a, r);
         return r;
     }
 
-// (public) this^2
+    // (public) this^2
     function bnSquare() {
         var r = nbi();
         this.squareTo(r);
         return r;
     }
 
-// (public) this / a
+    // (public) this / a
     function bnDivide(a) {
         var r = nbi();
         this.divRemTo(a, r, null);
         return r;
     }
 
-// (public) this % a
+    // (public) this % a
     function bnRemainder(a) {
         var r = nbi();
         this.divRemTo(a, null, r);
         return r;
     }
 
-// (public) [this/a,this%a]
+    // (public) [this/a,this%a]
     function bnDivideAndRemainder(a) {
         var q = nbi(), r = nbi();
         this.divRemTo(a, q, r);
         return new Array(q, r);
     }
 
-// (protected) this *= n, this >= 0, 1 < n < DV
+    // (protected) this *= n, this >= 0, 1 < n < DV
     function bnpDMultiply(n) {
         this[this.t] = this.am(0, n - 1, this, 0, 0, this.t);
         ++this.t;
         this.clamp();
     }
 
-// (protected) this += n << w words, this >= 0
+    // (protected) this += n << w words, this >= 0
     function bnpDAddOffset(n, w) {
         if (n == 0) return;
         while (this.t <= w) this[this.t++] = 0;
@@ -3848,8 +3848,8 @@
         }
     }
 
-// A "null" reducer
-    function NullExp() {}
+    // A "null" reducer
+    function NullExp() { }
 
     function nNop(x) { return x; }
 
@@ -3862,11 +3862,11 @@
     NullExp.prototype.mulTo = nMulTo;
     NullExp.prototype.sqrTo = nSqrTo;
 
-// (public) this^e
+    // (public) this^e
     function bnPow(e) { return this.exp(e, new NullExp()); }
 
-// (protected) r = lower n words of "this * a", a.t <= n
-// "this" should be the larger one if appropriate.
+    // (protected) r = lower n words of "this * a", a.t <= n
+    // "this" should be the larger one if appropriate.
     function bnpMultiplyLowerTo(a, n, r) {
         var i = Math.min(this.t + a.t, n);
         r.s = 0; // assumes a,this >= 0
@@ -3878,8 +3878,8 @@
         r.clamp();
     }
 
-// (protected) r = "this * a" without lower n words, n > 0
-// "this" should be the larger one if appropriate.
+    // (protected) r = "this * a" without lower n words, n > 0
+    // "this" should be the larger one if appropriate.
     function bnpMultiplyUpperTo(a, n, r) {
         --n;
         var i = r.t = this.t + a.t - n;
@@ -3891,7 +3891,7 @@
         r.drShiftTo(1, r);
     }
 
-// Barrett modular reduction
+    // Barrett modular reduction
     function Barrett(m) {
         // setup Barrett
         this.r2 = nbi();
@@ -3914,7 +3914,7 @@
 
     function barrettRevert(x) { return x; }
 
-// x = x mod m (HAC 14.42)
+    // x = x mod m (HAC 14.42)
     function barrettReduce(x) {
         x.drShiftTo(this.m.t - 1, this.r2);
         if (x.t > this.m.t + 1) {
@@ -3928,13 +3928,13 @@
         while (x.compareTo(this.m) >= 0) x.subTo(this.m, x);
     }
 
-// r = x^2 mod m; x != r
+    // r = x^2 mod m; x != r
     function barrettSqrTo(x, r) {
         x.squareTo(r);
         this.reduce(r);
     }
 
-// r = x*y mod m; x,y != r
+    // r = x*y mod m; x,y != r
     function barrettMulTo(x, y, r) {
         x.multiplyTo(y, r);
         this.reduce(r);
@@ -3946,7 +3946,7 @@
     Barrett.prototype.mulTo = barrettMulTo;
     Barrett.prototype.sqrTo = barrettSqrTo;
 
-// (public) this^e % m (HAC 14.85)
+    // (public) this^e % m (HAC 14.85)
     function bnModPow(e, m) {
         var i = e.bitLength(), k, r = nbv(1), z;
         if (i <= 0) return r;
@@ -4025,7 +4025,7 @@
         return z.revert(r);
     }
 
-// (public) gcd(this,a) (HAC 14.54)
+    // (public) gcd(this,a) (HAC 14.54)
     function bnGCD(a) {
         var x = (this.s < 0) ? this.negate() : this.clone();
         var y = (a.s < 0) ? a.negate() : a.clone();
@@ -4056,7 +4056,7 @@
         return y;
     }
 
-// (protected) this % n, n < 2^26
+    // (protected) this % n, n < 2^26
     function bnpModInt(n) {
         if (n <= 0) return 0;
         var d = this.DV % n, r = (this.s < 0) ? n - 1 : 0;
@@ -4066,7 +4066,7 @@
         return r;
     }
 
-// (public) 1/this % m (HAC 14.61)
+    // (public) 1/this % m (HAC 14.61)
     function bnModInverse(m) {
         var ac = m.isEven();
         if ((this.isEven() && ac) || m.signum() == 0) return BigInteger.ZERO;
@@ -4116,7 +4116,7 @@
     var lowprimes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997];
     var lplim = (1 << 26) / lowprimes[lowprimes.length - 1];
 
-// (public) test primality with certainty >= 1-.5^t
+    // (public) test primality with certainty >= 1-.5^t
     function bnIsProbablePrime(t) {
         var i, x = this.abs();
         if (x.t == 1 && x[0] <= lowprimes[lowprimes.length - 1]) {
@@ -4135,7 +4135,7 @@
         return x.millerRabin(t);
     }
 
-// (protected) true if probably prime (HAC 4.24, Miller-Rabin)
+    // (protected) true if probably prime (HAC 4.24, Miller-Rabin)
     function bnpMillerRabin(t) {
         var n1 = this.subtract(BigInteger.ONE);
         var k = n1.getLowestSetBit();
@@ -4160,7 +4160,7 @@
         return true;
     }
 
-// protected
+    // protected
     BigInteger.prototype.chunkSize = bnpChunkSize;
     BigInteger.prototype.toRadix = bnpToRadix;
     BigInteger.prototype.fromRadix = bnpFromRadix;
@@ -4175,7 +4175,7 @@
     BigInteger.prototype.modInt = bnpModInt;
     BigInteger.prototype.millerRabin = bnpMillerRabin;
 
-// public
+    // public
     BigInteger.prototype.clone = bnClone;
     BigInteger.prototype.intValue = bnIntValue;
     BigInteger.prototype.byteValue = bnByteValue;
@@ -4215,7 +4215,7 @@
 
     return BigInteger;
 });
-;(function (factory) {
+; (function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('SRPClient', [
@@ -4227,7 +4227,7 @@
         window.SRPClient = factory(sha1, sjcl, BigInteger);
     }
 })(function (sha1, sjcl, BigInteger) {
-    
+
     /*
      * Construct an SRP object with a username,
      * password, and the bits identifying the 
@@ -4269,30 +4269,30 @@
      * to the SRP protocol 6A (see RFC5054).
     */
     SRPClient.prototype = {
-        toHexString: function(bi) {
+        toHexString: function (bi) {
             var hex = bi.toString(16);
             if (hex.length % 2 === 1) {
                 hex = "0" + hex;
             }
             return hex;
         },
-        padLeft: function(orig, len) {
+        padLeft: function (orig, len) {
             if (orig.length > len) return orig;
 
             var arr = Array(len - orig.length + 1);
             return arr.join("0") + orig;
         },
-        bytesToHex: function(bytes) {
+        bytesToHex: function (bytes) {
             var self = this;
-            var b = bytes.map(function(x) { return self.padLeft(self.toHexString(x), 2); });
+            var b = bytes.map(function (x) { return self.padLeft(self.toHexString(x), 2); });
             return b.join("");
         },
-        hexToBytes: function(hex) {
+        hexToBytes: function (hex) {
             if (hex.length % 2 === 1) throw new Error("hexToBytes can't have a string with an odd number of characters.");
             if (hex.indexOf("0x") === 0) hex = hex.slice(2);
-            return hex.match(/../g).map(function(x) { return parseInt(x, 16) });
+            return hex.match(/../g).map(function (x) { return parseInt(x, 16) });
         },
-        stringToBytes: function(str) {
+        stringToBytes: function (str) {
             var bytes = [];
             for (var i = 0; i < str.length; ++i) {
                 bytes.push(str.charCodeAt(i));
@@ -4311,7 +4311,7 @@
      * Calculate k = H(N || g), which is used
      * throughout various SRP calculations.
      */
-        k: function() {
+        k: function () {
 
             // Convert to hex values.
             var toHash = [
@@ -4327,7 +4327,7 @@
         /*
      * Calculate x = SHA1(s | SHA1(I | ":" | P))
      */
-        calculateX: function(saltHex) {
+        calculateX: function (saltHex) {
 
             // Verify presence of parameters.
             if (!saltHex) throw 'Missing parameter.'
@@ -4351,7 +4351,7 @@
                 return xtmp;
             }
             else {
-                var one = new BigInteger(1,16);
+                var one = new BigInteger(1, 16);
                 return xtmp.mod(this.N.subtract(one));
             }
 
@@ -4360,7 +4360,7 @@
         /*
      * Calculate v = g^x % N
      */
-        calculateV: function(salt) {
+        calculateV: function (salt) {
 
             // Verify presence of parameters.
             if (!salt) throw 'Missing parameter.';
@@ -4378,7 +4378,7 @@
      * to prevent an attacker who learns a user's verifier
      * from being able to authenticate as that user.
      */
-        calculateU: function(A, B) {
+        calculateU: function (A, B) {
 
             // Verify presence of parameters.
             if (!A || !B) throw 'Missing parameter(s).';
@@ -4396,7 +4396,7 @@
 
         },
 
-        canCalculateA: function(a) {
+        canCalculateA: function (a) {
             if (!a) throw 'Missing parameter.';
 
             return Math.ceil(a.bitLength() / 8) >= 256 / 8;
@@ -4407,7 +4407,7 @@
      * 2.5.4 Calculate the client's public value A = g^a % N,
      * where a is a random number at least 256 bits in length.
      */
-        calculateA: function(a) {
+        calculateA: function (a) {
 
             // Verify presence of parameter.
             if (!a) throw 'Missing parameter.';
@@ -4428,7 +4428,7 @@
         /*
     * Calculate match M = H(H(N) XOR H(g) | H(username) | s | A | B | K)
     */
-        calculateM1: function(A, B, K, salt) {
+        calculateM1: function (A, B, K, salt) {
 
             // Verify presence of parameters.
             if (!A || !B || !K || !salt)
@@ -4509,7 +4509,7 @@
         /*
      * Calculate match M = H(A, B, K) or M = H(A, M, K)
      */
-        calculateM2: function(A, B_or_M, K) {
+        calculateM2: function (A, B_or_M, K) {
 
             // Verify presence of parameters.
             if (!A || !B_or_M || !K)
@@ -4538,7 +4538,7 @@
      * Calculate the client's premaster secret 
      * S = (B - (k * g^x)) ^ (a + (u * x)) % N
      */
-        calculateS: function(B, salt, uu, aa) {
+        calculateS: function (B, salt, uu, aa) {
 
             // Verify presence of parameters.
             if (!B || !salt || !uu || !aa)
@@ -4563,7 +4563,7 @@
 
         },
 
-        calculateK: function(S) {
+        calculateK: function (S) {
             return this.hexHash(this.toHexString(S));
         },
 
@@ -4573,7 +4573,7 @@
      */
 
         /* Generate a random big integer */
-        srpRandom: function() {
+        srpRandom: function () {
 
             var words = sjcl.random.randomWords(8, 0);
             var hex = sjcl.codec.hex.fromBits(words);
@@ -4595,7 +4595,7 @@
         },
 
         /* Return a random hexadecimal salt */
-        randomHexSalt: function() {
+        randomHexSalt: function () {
 
             var words = sjcl.random.randomWords(8, 0);
             var hex = sjcl.codec.hex.fromBits(words);
@@ -4612,7 +4612,7 @@
     * SHA1 hashing function with padding: input 
     * is prefixed with 0 to meet N hex width.
     */
-        paddedHash: function(array) {
+        paddedHash: function (array) {
 
             var nlen = 2 * ((this.toHexString(this.N).length * 4 + 7) >> 3);
 
@@ -4631,18 +4631,18 @@
         /* 
      * Generic hashing function.
      */
-        hash: function(str) {
+        hash: function (str) {
 
             switch (this.hashFn.toLowerCase()) {
 
-            case 'sha-256':
-                var s = sjcl.codec.hex.fromBits(
-                    sjcl.hash.sha256.hash(str));
-                return this.nZeros(64 - s.length) + s;
+                case 'sha-256':
+                    var s = sjcl.codec.hex.fromBits(
+                        sjcl.hash.sha256.hash(str));
+                    return this.nZeros(64 - s.length) + s;
 
-            case 'sha-1':
-            default:
-                return sha1.calcSHA1(str);
+                case 'sha-1':
+                default:
+                    return sha1.calcSHA1(str);
 
             }
         },
@@ -4650,18 +4650,18 @@
         /*
      * Hexadecimal hashing function.
      */
-        hexHash: function(str) {
+        hexHash: function (str) {
             switch (this.hashFn.toLowerCase()) {
 
-            case 'sha-256':
-                var s = sjcl.codec.hex.fromBits(
-                    sjcl.hash.sha256.hash(
-                        sjcl.codec.hex.toBits(str)));
-                return this.nZeros(64 - s.length) + s;
+                case 'sha-256':
+                    var s = sjcl.codec.hex.fromBits(
+                        sjcl.hash.sha256.hash(
+                            sjcl.codec.hex.toBits(str)));
+                    return this.nZeros(64 - s.length) + s;
 
-            case 'sha-1':
-            default:
-                return this.hash(this.pack(str));
+                case 'sha-1':
+                default:
+                    return this.hash(this.pack(str));
 
             }
         },
@@ -4669,7 +4669,7 @@
         /*
      * Hex to string conversion.
      */
-        pack: function(hex) {
+        pack: function (hex) {
 
             // To prevent null byte termination bug
             if (hex.length % 2 != 0) hex = '0' + hex;
@@ -4688,7 +4688,7 @@
         },
 
         /* Return a string with N zeros. */
-        nZeros: function(n) {
+        nZeros: function (n) {
 
             if (n < 1) return '';
             var t = this.nZeros(n >> 1);
@@ -4861,7 +4861,7 @@
      */
 
         /* Calculate the server's public value B. */
-        calculateB: function(b, v) {
+        calculateB: function (b, v) {
 
             // Verify presence of parameters.
             if (!b || !v) throw 'Missing parameters.';
@@ -4874,7 +4874,7 @@
         },
 
         /* Calculate the server's premaster secret */
-        calculateServerS: function(A, v, u, B) {
+        calculateServerS: function (A, v, u, B) {
 
             // Verify presence of parameters.
             if (!A || !v || !u || !B)
@@ -4902,27 +4902,27 @@
  * @version   3.0.2
  */
 
-;(function() {
+; (function () {
     "use strict";
     function lib$es6$promise$utils$$objectOrFunction(x) {
-      return typeof x === 'function' || (typeof x === 'object' && x !== null);
+        return typeof x === 'function' || (typeof x === 'object' && x !== null);
     }
 
     function lib$es6$promise$utils$$isFunction(x) {
-      return typeof x === 'function';
+        return typeof x === 'function';
     }
 
     function lib$es6$promise$utils$$isMaybeThenable(x) {
-      return typeof x === 'object' && x !== null;
+        return typeof x === 'object' && x !== null;
     }
 
     var lib$es6$promise$utils$$_isArray;
     if (!Array.isArray) {
-      lib$es6$promise$utils$$_isArray = function (x) {
-        return Object.prototype.toString.call(x) === '[object Array]';
-      };
+        lib$es6$promise$utils$$_isArray = function (x) {
+            return Object.prototype.toString.call(x) === '[object Array]';
+        };
     } else {
-      lib$es6$promise$utils$$_isArray = Array.isArray;
+        lib$es6$promise$utils$$_isArray = Array.isArray;
     }
 
     var lib$es6$promise$utils$$isArray = lib$es6$promise$utils$$_isArray;
@@ -4932,27 +4932,27 @@
     var lib$es6$promise$asap$$customSchedulerFn;
 
     var lib$es6$promise$asap$$asap = function asap(callback, arg) {
-      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len] = callback;
-      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len + 1] = arg;
-      lib$es6$promise$asap$$len += 2;
-      if (lib$es6$promise$asap$$len === 2) {
-        // If len is 2, that means that we need to schedule an async flush.
-        // If additional callbacks are queued before the queue is flushed, they
-        // will be processed by this flush that we are scheduling.
-        if (lib$es6$promise$asap$$customSchedulerFn) {
-          lib$es6$promise$asap$$customSchedulerFn(lib$es6$promise$asap$$flush);
-        } else {
-          lib$es6$promise$asap$$scheduleFlush();
+        lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len] = callback;
+        lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len + 1] = arg;
+        lib$es6$promise$asap$$len += 2;
+        if (lib$es6$promise$asap$$len === 2) {
+            // If len is 2, that means that we need to schedule an async flush.
+            // If additional callbacks are queued before the queue is flushed, they
+            // will be processed by this flush that we are scheduling.
+            if (lib$es6$promise$asap$$customSchedulerFn) {
+                lib$es6$promise$asap$$customSchedulerFn(lib$es6$promise$asap$$flush);
+            } else {
+                lib$es6$promise$asap$$scheduleFlush();
+            }
         }
-      }
     }
 
     function lib$es6$promise$asap$$setScheduler(scheduleFn) {
-      lib$es6$promise$asap$$customSchedulerFn = scheduleFn;
+        lib$es6$promise$asap$$customSchedulerFn = scheduleFn;
     }
 
     function lib$es6$promise$asap$$setAsap(asapFn) {
-      lib$es6$promise$asap$$asap = asapFn;
+        lib$es6$promise$asap$$asap = asapFn;
     }
 
     var lib$es6$promise$asap$$browserWindow = (typeof window !== 'undefined') ? window : undefined;
@@ -4962,480 +4962,480 @@
 
     // test for web worker but not in IE10
     var lib$es6$promise$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
-      typeof importScripts !== 'undefined' &&
-      typeof MessageChannel !== 'undefined';
+        typeof importScripts !== 'undefined' &&
+        typeof MessageChannel !== 'undefined';
 
     // node
     function lib$es6$promise$asap$$useNextTick() {
-      // node version 0.10.x displays a deprecation warning when nextTick is used recursively
-      // see https://github.com/cujojs/when/issues/410 for details
-      return function() {
-        process.nextTick(lib$es6$promise$asap$$flush);
-      };
+        // node version 0.10.x displays a deprecation warning when nextTick is used recursively
+        // see https://github.com/cujojs/when/issues/410 for details
+        return function () {
+            process.nextTick(lib$es6$promise$asap$$flush);
+        };
     }
 
     // vertx
     function lib$es6$promise$asap$$useVertxTimer() {
-      return function() {
-        lib$es6$promise$asap$$vertxNext(lib$es6$promise$asap$$flush);
-      };
+        return function () {
+            lib$es6$promise$asap$$vertxNext(lib$es6$promise$asap$$flush);
+        };
     }
 
     function lib$es6$promise$asap$$useMutationObserver() {
-      var iterations = 0;
-      var observer = new lib$es6$promise$asap$$BrowserMutationObserver(lib$es6$promise$asap$$flush);
-      var node = document.createTextNode('');
-      observer.observe(node, { characterData: true });
+        var iterations = 0;
+        var observer = new lib$es6$promise$asap$$BrowserMutationObserver(lib$es6$promise$asap$$flush);
+        var node = document.createTextNode('');
+        observer.observe(node, { characterData: true });
 
-      return function() {
-        node.data = (iterations = ++iterations % 2);
-      };
+        return function () {
+            node.data = (iterations = ++iterations % 2);
+        };
     }
 
     // web worker
     function lib$es6$promise$asap$$useMessageChannel() {
-      var channel = new MessageChannel();
-      channel.port1.onmessage = lib$es6$promise$asap$$flush;
-      return function () {
-        channel.port2.postMessage(0);
-      };
+        var channel = new MessageChannel();
+        channel.port1.onmessage = lib$es6$promise$asap$$flush;
+        return function () {
+            channel.port2.postMessage(0);
+        };
     }
 
     function lib$es6$promise$asap$$useSetTimeout() {
-      return function() {
-        setTimeout(lib$es6$promise$asap$$flush, 1);
-      };
+        return function () {
+            setTimeout(lib$es6$promise$asap$$flush, 1);
+        };
     }
 
     var lib$es6$promise$asap$$queue = new Array(1000);
     function lib$es6$promise$asap$$flush() {
-      for (var i = 0; i < lib$es6$promise$asap$$len; i+=2) {
-        var callback = lib$es6$promise$asap$$queue[i];
-        var arg = lib$es6$promise$asap$$queue[i+1];
+        for (var i = 0; i < lib$es6$promise$asap$$len; i += 2) {
+            var callback = lib$es6$promise$asap$$queue[i];
+            var arg = lib$es6$promise$asap$$queue[i + 1];
 
-        callback(arg);
+            callback(arg);
 
-        lib$es6$promise$asap$$queue[i] = undefined;
-        lib$es6$promise$asap$$queue[i+1] = undefined;
-      }
+            lib$es6$promise$asap$$queue[i] = undefined;
+            lib$es6$promise$asap$$queue[i + 1] = undefined;
+        }
 
-      lib$es6$promise$asap$$len = 0;
+        lib$es6$promise$asap$$len = 0;
     }
 
     function lib$es6$promise$asap$$attemptVertx() {
-      try {
-        var r = require;
-        var vertx = r('vertx');
-        lib$es6$promise$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
-        return lib$es6$promise$asap$$useVertxTimer();
-      } catch(e) {
-        return lib$es6$promise$asap$$useSetTimeout();
-      }
+        try {
+            var r = require;
+            var vertx = r('@vertx/core');
+            lib$es6$promise$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
+            return lib$es6$promise$asap$$useVertxTimer();
+        } catch (e) {
+            return lib$es6$promise$asap$$useSetTimeout();
+        }
     }
 
     var lib$es6$promise$asap$$scheduleFlush;
     // Decide what async method to use to triggering processing of queued callbacks:
     if (lib$es6$promise$asap$$isNode) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useNextTick();
+        lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useNextTick();
     } else if (lib$es6$promise$asap$$BrowserMutationObserver) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMutationObserver();
+        lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMutationObserver();
     } else if (lib$es6$promise$asap$$isWorker) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMessageChannel();
+        lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMessageChannel();
     } else if (lib$es6$promise$asap$$browserWindow === undefined && typeof require === 'function') {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$attemptVertx();
+        lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$attemptVertx();
     } else {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useSetTimeout();
+        lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useSetTimeout();
     }
 
-    function lib$es6$promise$$internal$$noop() {}
+    function lib$es6$promise$$internal$$noop() { }
 
-    var lib$es6$promise$$internal$$PENDING   = void 0;
+    var lib$es6$promise$$internal$$PENDING = void 0;
     var lib$es6$promise$$internal$$FULFILLED = 1;
-    var lib$es6$promise$$internal$$REJECTED  = 2;
+    var lib$es6$promise$$internal$$REJECTED = 2;
 
     var lib$es6$promise$$internal$$GET_THEN_ERROR = new lib$es6$promise$$internal$$ErrorObject();
 
     function lib$es6$promise$$internal$$selfFulfillment() {
-      return new TypeError("You cannot resolve a promise with itself");
+        return new TypeError("You cannot resolve a promise with itself");
     }
 
     function lib$es6$promise$$internal$$cannotReturnOwn() {
-      return new TypeError('A promises callback cannot return that same promise.');
+        return new TypeError('A promises callback cannot return that same promise.');
     }
 
     function lib$es6$promise$$internal$$getThen(promise) {
-      try {
-        return promise.then;
-      } catch(error) {
-        lib$es6$promise$$internal$$GET_THEN_ERROR.error = error;
-        return lib$es6$promise$$internal$$GET_THEN_ERROR;
-      }
+        try {
+            return promise.then;
+        } catch (error) {
+            lib$es6$promise$$internal$$GET_THEN_ERROR.error = error;
+            return lib$es6$promise$$internal$$GET_THEN_ERROR;
+        }
     }
 
     function lib$es6$promise$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
-      try {
-        then.call(value, fulfillmentHandler, rejectionHandler);
-      } catch(e) {
-        return e;
-      }
+        try {
+            then.call(value, fulfillmentHandler, rejectionHandler);
+        } catch (e) {
+            return e;
+        }
     }
 
     function lib$es6$promise$$internal$$handleForeignThenable(promise, thenable, then) {
-       lib$es6$promise$asap$$asap(function(promise) {
-        var sealed = false;
-        var error = lib$es6$promise$$internal$$tryThen(then, thenable, function(value) {
-          if (sealed) { return; }
-          sealed = true;
-          if (thenable !== value) {
-            lib$es6$promise$$internal$$resolve(promise, value);
-          } else {
-            lib$es6$promise$$internal$$fulfill(promise, value);
-          }
-        }, function(reason) {
-          if (sealed) { return; }
-          sealed = true;
+        lib$es6$promise$asap$$asap(function (promise) {
+            var sealed = false;
+            var error = lib$es6$promise$$internal$$tryThen(then, thenable, function (value) {
+                if (sealed) { return; }
+                sealed = true;
+                if (thenable !== value) {
+                    lib$es6$promise$$internal$$resolve(promise, value);
+                } else {
+                    lib$es6$promise$$internal$$fulfill(promise, value);
+                }
+            }, function (reason) {
+                if (sealed) { return; }
+                sealed = true;
 
-          lib$es6$promise$$internal$$reject(promise, reason);
-        }, 'Settle: ' + (promise._label || ' unknown promise'));
+                lib$es6$promise$$internal$$reject(promise, reason);
+            }, 'Settle: ' + (promise._label || ' unknown promise'));
 
-        if (!sealed && error) {
-          sealed = true;
-          lib$es6$promise$$internal$$reject(promise, error);
-        }
-      }, promise);
+            if (!sealed && error) {
+                sealed = true;
+                lib$es6$promise$$internal$$reject(promise, error);
+            }
+        }, promise);
     }
 
     function lib$es6$promise$$internal$$handleOwnThenable(promise, thenable) {
-      if (thenable._state === lib$es6$promise$$internal$$FULFILLED) {
-        lib$es6$promise$$internal$$fulfill(promise, thenable._result);
-      } else if (thenable._state === lib$es6$promise$$internal$$REJECTED) {
-        lib$es6$promise$$internal$$reject(promise, thenable._result);
-      } else {
-        lib$es6$promise$$internal$$subscribe(thenable, undefined, function(value) {
-          lib$es6$promise$$internal$$resolve(promise, value);
-        }, function(reason) {
-          lib$es6$promise$$internal$$reject(promise, reason);
-        });
-      }
+        if (thenable._state === lib$es6$promise$$internal$$FULFILLED) {
+            lib$es6$promise$$internal$$fulfill(promise, thenable._result);
+        } else if (thenable._state === lib$es6$promise$$internal$$REJECTED) {
+            lib$es6$promise$$internal$$reject(promise, thenable._result);
+        } else {
+            lib$es6$promise$$internal$$subscribe(thenable, undefined, function (value) {
+                lib$es6$promise$$internal$$resolve(promise, value);
+            }, function (reason) {
+                lib$es6$promise$$internal$$reject(promise, reason);
+            });
+        }
     }
 
     function lib$es6$promise$$internal$$handleMaybeThenable(promise, maybeThenable) {
-      if (maybeThenable.constructor === promise.constructor) {
-        lib$es6$promise$$internal$$handleOwnThenable(promise, maybeThenable);
-      } else {
-        var then = lib$es6$promise$$internal$$getThen(maybeThenable);
-
-        if (then === lib$es6$promise$$internal$$GET_THEN_ERROR) {
-          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$GET_THEN_ERROR.error);
-        } else if (then === undefined) {
-          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
-        } else if (lib$es6$promise$utils$$isFunction(then)) {
-          lib$es6$promise$$internal$$handleForeignThenable(promise, maybeThenable, then);
+        if (maybeThenable.constructor === promise.constructor) {
+            lib$es6$promise$$internal$$handleOwnThenable(promise, maybeThenable);
         } else {
-          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
+            var then = lib$es6$promise$$internal$$getThen(maybeThenable);
+
+            if (then === lib$es6$promise$$internal$$GET_THEN_ERROR) {
+                lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$GET_THEN_ERROR.error);
+            } else if (then === undefined) {
+                lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
+            } else if (lib$es6$promise$utils$$isFunction(then)) {
+                lib$es6$promise$$internal$$handleForeignThenable(promise, maybeThenable, then);
+            } else {
+                lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
+            }
         }
-      }
     }
 
     function lib$es6$promise$$internal$$resolve(promise, value) {
-      if (promise === value) {
-        lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$selfFulfillment());
-      } else if (lib$es6$promise$utils$$objectOrFunction(value)) {
-        lib$es6$promise$$internal$$handleMaybeThenable(promise, value);
-      } else {
-        lib$es6$promise$$internal$$fulfill(promise, value);
-      }
+        if (promise === value) {
+            lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$selfFulfillment());
+        } else if (lib$es6$promise$utils$$objectOrFunction(value)) {
+            lib$es6$promise$$internal$$handleMaybeThenable(promise, value);
+        } else {
+            lib$es6$promise$$internal$$fulfill(promise, value);
+        }
     }
 
     function lib$es6$promise$$internal$$publishRejection(promise) {
-      if (promise._onerror) {
-        promise._onerror(promise._result);
-      }
+        if (promise._onerror) {
+            promise._onerror(promise._result);
+        }
 
-      lib$es6$promise$$internal$$publish(promise);
+        lib$es6$promise$$internal$$publish(promise);
     }
 
     function lib$es6$promise$$internal$$fulfill(promise, value) {
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
+        if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
 
-      promise._result = value;
-      promise._state = lib$es6$promise$$internal$$FULFILLED;
+        promise._result = value;
+        promise._state = lib$es6$promise$$internal$$FULFILLED;
 
-      if (promise._subscribers.length !== 0) {
-        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, promise);
-      }
+        if (promise._subscribers.length !== 0) {
+            lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, promise);
+        }
     }
 
     function lib$es6$promise$$internal$$reject(promise, reason) {
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
-      promise._state = lib$es6$promise$$internal$$REJECTED;
-      promise._result = reason;
+        if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
+        promise._state = lib$es6$promise$$internal$$REJECTED;
+        promise._result = reason;
 
-      lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publishRejection, promise);
+        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publishRejection, promise);
     }
 
     function lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
-      var subscribers = parent._subscribers;
-      var length = subscribers.length;
+        var subscribers = parent._subscribers;
+        var length = subscribers.length;
 
-      parent._onerror = null;
+        parent._onerror = null;
 
-      subscribers[length] = child;
-      subscribers[length + lib$es6$promise$$internal$$FULFILLED] = onFulfillment;
-      subscribers[length + lib$es6$promise$$internal$$REJECTED]  = onRejection;
+        subscribers[length] = child;
+        subscribers[length + lib$es6$promise$$internal$$FULFILLED] = onFulfillment;
+        subscribers[length + lib$es6$promise$$internal$$REJECTED] = onRejection;
 
-      if (length === 0 && parent._state) {
-        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, parent);
-      }
+        if (length === 0 && parent._state) {
+            lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, parent);
+        }
     }
 
     function lib$es6$promise$$internal$$publish(promise) {
-      var subscribers = promise._subscribers;
-      var settled = promise._state;
+        var subscribers = promise._subscribers;
+        var settled = promise._state;
 
-      if (subscribers.length === 0) { return; }
+        if (subscribers.length === 0) { return; }
 
-      var child, callback, detail = promise._result;
+        var child, callback, detail = promise._result;
 
-      for (var i = 0; i < subscribers.length; i += 3) {
-        child = subscribers[i];
-        callback = subscribers[i + settled];
+        for (var i = 0; i < subscribers.length; i += 3) {
+            child = subscribers[i];
+            callback = subscribers[i + settled];
 
-        if (child) {
-          lib$es6$promise$$internal$$invokeCallback(settled, child, callback, detail);
-        } else {
-          callback(detail);
+            if (child) {
+                lib$es6$promise$$internal$$invokeCallback(settled, child, callback, detail);
+            } else {
+                callback(detail);
+            }
         }
-      }
 
-      promise._subscribers.length = 0;
+        promise._subscribers.length = 0;
     }
 
     function lib$es6$promise$$internal$$ErrorObject() {
-      this.error = null;
+        this.error = null;
     }
 
     var lib$es6$promise$$internal$$TRY_CATCH_ERROR = new lib$es6$promise$$internal$$ErrorObject();
 
     function lib$es6$promise$$internal$$tryCatch(callback, detail) {
-      try {
-        return callback(detail);
-      } catch(e) {
-        lib$es6$promise$$internal$$TRY_CATCH_ERROR.error = e;
-        return lib$es6$promise$$internal$$TRY_CATCH_ERROR;
-      }
+        try {
+            return callback(detail);
+        } catch (e) {
+            lib$es6$promise$$internal$$TRY_CATCH_ERROR.error = e;
+            return lib$es6$promise$$internal$$TRY_CATCH_ERROR;
+        }
     }
 
     function lib$es6$promise$$internal$$invokeCallback(settled, promise, callback, detail) {
-      var hasCallback = lib$es6$promise$utils$$isFunction(callback),
-          value, error, succeeded, failed;
+        var hasCallback = lib$es6$promise$utils$$isFunction(callback),
+            value, error, succeeded, failed;
 
-      if (hasCallback) {
-        value = lib$es6$promise$$internal$$tryCatch(callback, detail);
+        if (hasCallback) {
+            value = lib$es6$promise$$internal$$tryCatch(callback, detail);
 
-        if (value === lib$es6$promise$$internal$$TRY_CATCH_ERROR) {
-          failed = true;
-          error = value.error;
-          value = null;
+            if (value === lib$es6$promise$$internal$$TRY_CATCH_ERROR) {
+                failed = true;
+                error = value.error;
+                value = null;
+            } else {
+                succeeded = true;
+            }
+
+            if (promise === value) {
+                lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$cannotReturnOwn());
+                return;
+            }
+
         } else {
-          succeeded = true;
+            value = detail;
+            succeeded = true;
         }
 
-        if (promise === value) {
-          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$cannotReturnOwn());
-          return;
+        if (promise._state !== lib$es6$promise$$internal$$PENDING) {
+            // noop
+        } else if (hasCallback && succeeded) {
+            lib$es6$promise$$internal$$resolve(promise, value);
+        } else if (failed) {
+            lib$es6$promise$$internal$$reject(promise, error);
+        } else if (settled === lib$es6$promise$$internal$$FULFILLED) {
+            lib$es6$promise$$internal$$fulfill(promise, value);
+        } else if (settled === lib$es6$promise$$internal$$REJECTED) {
+            lib$es6$promise$$internal$$reject(promise, value);
         }
-
-      } else {
-        value = detail;
-        succeeded = true;
-      }
-
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) {
-        // noop
-      } else if (hasCallback && succeeded) {
-        lib$es6$promise$$internal$$resolve(promise, value);
-      } else if (failed) {
-        lib$es6$promise$$internal$$reject(promise, error);
-      } else if (settled === lib$es6$promise$$internal$$FULFILLED) {
-        lib$es6$promise$$internal$$fulfill(promise, value);
-      } else if (settled === lib$es6$promise$$internal$$REJECTED) {
-        lib$es6$promise$$internal$$reject(promise, value);
-      }
     }
 
     function lib$es6$promise$$internal$$initializePromise(promise, resolver) {
-      try {
-        resolver(function resolvePromise(value){
-          lib$es6$promise$$internal$$resolve(promise, value);
-        }, function rejectPromise(reason) {
-          lib$es6$promise$$internal$$reject(promise, reason);
-        });
-      } catch(e) {
-        lib$es6$promise$$internal$$reject(promise, e);
-      }
+        try {
+            resolver(function resolvePromise(value) {
+                lib$es6$promise$$internal$$resolve(promise, value);
+            }, function rejectPromise(reason) {
+                lib$es6$promise$$internal$$reject(promise, reason);
+            });
+        } catch (e) {
+            lib$es6$promise$$internal$$reject(promise, e);
+        }
     }
 
     function lib$es6$promise$enumerator$$Enumerator(Constructor, input) {
-      var enumerator = this;
+        var enumerator = this;
 
-      enumerator._instanceConstructor = Constructor;
-      enumerator.promise = new Constructor(lib$es6$promise$$internal$$noop);
+        enumerator._instanceConstructor = Constructor;
+        enumerator.promise = new Constructor(lib$es6$promise$$internal$$noop);
 
-      if (enumerator._validateInput(input)) {
-        enumerator._input     = input;
-        enumerator.length     = input.length;
-        enumerator._remaining = input.length;
+        if (enumerator._validateInput(input)) {
+            enumerator._input = input;
+            enumerator.length = input.length;
+            enumerator._remaining = input.length;
 
-        enumerator._init();
+            enumerator._init();
 
-        if (enumerator.length === 0) {
-          lib$es6$promise$$internal$$fulfill(enumerator.promise, enumerator._result);
+            if (enumerator.length === 0) {
+                lib$es6$promise$$internal$$fulfill(enumerator.promise, enumerator._result);
+            } else {
+                enumerator.length = enumerator.length || 0;
+                enumerator._enumerate();
+                if (enumerator._remaining === 0) {
+                    lib$es6$promise$$internal$$fulfill(enumerator.promise, enumerator._result);
+                }
+            }
         } else {
-          enumerator.length = enumerator.length || 0;
-          enumerator._enumerate();
-          if (enumerator._remaining === 0) {
-            lib$es6$promise$$internal$$fulfill(enumerator.promise, enumerator._result);
-          }
+            lib$es6$promise$$internal$$reject(enumerator.promise, enumerator._validationError());
         }
-      } else {
-        lib$es6$promise$$internal$$reject(enumerator.promise, enumerator._validationError());
-      }
     }
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._validateInput = function(input) {
-      return lib$es6$promise$utils$$isArray(input);
+    lib$es6$promise$enumerator$$Enumerator.prototype._validateInput = function (input) {
+        return lib$es6$promise$utils$$isArray(input);
     };
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._validationError = function() {
-      return new Error('Array Methods must be provided an Array');
+    lib$es6$promise$enumerator$$Enumerator.prototype._validationError = function () {
+        return new Error('Array Methods must be provided an Array');
     };
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._init = function() {
-      this._result = new Array(this.length);
+    lib$es6$promise$enumerator$$Enumerator.prototype._init = function () {
+        this._result = new Array(this.length);
     };
 
     var lib$es6$promise$enumerator$$default = lib$es6$promise$enumerator$$Enumerator;
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._enumerate = function() {
-      var enumerator = this;
+    lib$es6$promise$enumerator$$Enumerator.prototype._enumerate = function () {
+        var enumerator = this;
 
-      var length  = enumerator.length;
-      var promise = enumerator.promise;
-      var input   = enumerator._input;
+        var length = enumerator.length;
+        var promise = enumerator.promise;
+        var input = enumerator._input;
 
-      for (var i = 0; promise._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
-        enumerator._eachEntry(input[i], i);
-      }
-    };
-
-    lib$es6$promise$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
-      var enumerator = this;
-      var c = enumerator._instanceConstructor;
-
-      if (lib$es6$promise$utils$$isMaybeThenable(entry)) {
-        if (entry.constructor === c && entry._state !== lib$es6$promise$$internal$$PENDING) {
-          entry._onerror = null;
-          enumerator._settledAt(entry._state, i, entry._result);
-        } else {
-          enumerator._willSettleAt(c.resolve(entry), i);
+        for (var i = 0; promise._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
+            enumerator._eachEntry(input[i], i);
         }
-      } else {
-        enumerator._remaining--;
-        enumerator._result[i] = entry;
-      }
     };
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
-      var enumerator = this;
-      var promise = enumerator.promise;
+    lib$es6$promise$enumerator$$Enumerator.prototype._eachEntry = function (entry, i) {
+        var enumerator = this;
+        var c = enumerator._instanceConstructor;
 
-      if (promise._state === lib$es6$promise$$internal$$PENDING) {
-        enumerator._remaining--;
-
-        if (state === lib$es6$promise$$internal$$REJECTED) {
-          lib$es6$promise$$internal$$reject(promise, value);
+        if (lib$es6$promise$utils$$isMaybeThenable(entry)) {
+            if (entry.constructor === c && entry._state !== lib$es6$promise$$internal$$PENDING) {
+                entry._onerror = null;
+                enumerator._settledAt(entry._state, i, entry._result);
+            } else {
+                enumerator._willSettleAt(c.resolve(entry), i);
+            }
         } else {
-          enumerator._result[i] = value;
+            enumerator._remaining--;
+            enumerator._result[i] = entry;
         }
-      }
-
-      if (enumerator._remaining === 0) {
-        lib$es6$promise$$internal$$fulfill(promise, enumerator._result);
-      }
     };
 
-    lib$es6$promise$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
-      var enumerator = this;
+    lib$es6$promise$enumerator$$Enumerator.prototype._settledAt = function (state, i, value) {
+        var enumerator = this;
+        var promise = enumerator.promise;
 
-      lib$es6$promise$$internal$$subscribe(promise, undefined, function(value) {
-        enumerator._settledAt(lib$es6$promise$$internal$$FULFILLED, i, value);
-      }, function(reason) {
-        enumerator._settledAt(lib$es6$promise$$internal$$REJECTED, i, reason);
-      });
+        if (promise._state === lib$es6$promise$$internal$$PENDING) {
+            enumerator._remaining--;
+
+            if (state === lib$es6$promise$$internal$$REJECTED) {
+                lib$es6$promise$$internal$$reject(promise, value);
+            } else {
+                enumerator._result[i] = value;
+            }
+        }
+
+        if (enumerator._remaining === 0) {
+            lib$es6$promise$$internal$$fulfill(promise, enumerator._result);
+        }
+    };
+
+    lib$es6$promise$enumerator$$Enumerator.prototype._willSettleAt = function (promise, i) {
+        var enumerator = this;
+
+        lib$es6$promise$$internal$$subscribe(promise, undefined, function (value) {
+            enumerator._settledAt(lib$es6$promise$$internal$$FULFILLED, i, value);
+        }, function (reason) {
+            enumerator._settledAt(lib$es6$promise$$internal$$REJECTED, i, reason);
+        });
     };
     function lib$es6$promise$promise$all$$all(entries) {
-      return new lib$es6$promise$enumerator$$default(this, entries).promise;
+        return new lib$es6$promise$enumerator$$default(this, entries).promise;
     }
     var lib$es6$promise$promise$all$$default = lib$es6$promise$promise$all$$all;
     function lib$es6$promise$promise$race$$race(entries) {
-      /*jshint validthis:true */
-      var Constructor = this;
+        /*jshint validthis:true */
+        var Constructor = this;
 
-      var promise = new Constructor(lib$es6$promise$$internal$$noop);
+        var promise = new Constructor(lib$es6$promise$$internal$$noop);
 
-      if (!lib$es6$promise$utils$$isArray(entries)) {
-        lib$es6$promise$$internal$$reject(promise, new TypeError('You must pass an array to race.'));
+        if (!lib$es6$promise$utils$$isArray(entries)) {
+            lib$es6$promise$$internal$$reject(promise, new TypeError('You must pass an array to race.'));
+            return promise;
+        }
+
+        var length = entries.length;
+
+        function onFulfillment(value) {
+            lib$es6$promise$$internal$$resolve(promise, value);
+        }
+
+        function onRejection(reason) {
+            lib$es6$promise$$internal$$reject(promise, reason);
+        }
+
+        for (var i = 0; promise._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
+            lib$es6$promise$$internal$$subscribe(Constructor.resolve(entries[i]), undefined, onFulfillment, onRejection);
+        }
+
         return promise;
-      }
-
-      var length = entries.length;
-
-      function onFulfillment(value) {
-        lib$es6$promise$$internal$$resolve(promise, value);
-      }
-
-      function onRejection(reason) {
-        lib$es6$promise$$internal$$reject(promise, reason);
-      }
-
-      for (var i = 0; promise._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
-        lib$es6$promise$$internal$$subscribe(Constructor.resolve(entries[i]), undefined, onFulfillment, onRejection);
-      }
-
-      return promise;
     }
     var lib$es6$promise$promise$race$$default = lib$es6$promise$promise$race$$race;
     function lib$es6$promise$promise$resolve$$resolve(object) {
-      /*jshint validthis:true */
-      var Constructor = this;
+        /*jshint validthis:true */
+        var Constructor = this;
 
-      if (object && typeof object === 'object' && object.constructor === Constructor) {
-        return object;
-      }
+        if (object && typeof object === 'object' && object.constructor === Constructor) {
+            return object;
+        }
 
-      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-      lib$es6$promise$$internal$$resolve(promise, object);
-      return promise;
+        var promise = new Constructor(lib$es6$promise$$internal$$noop);
+        lib$es6$promise$$internal$$resolve(promise, object);
+        return promise;
     }
     var lib$es6$promise$promise$resolve$$default = lib$es6$promise$promise$resolve$$resolve;
     function lib$es6$promise$promise$reject$$reject(reason) {
-      /*jshint validthis:true */
-      var Constructor = this;
-      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-      lib$es6$promise$$internal$$reject(promise, reason);
-      return promise;
+        /*jshint validthis:true */
+        var Constructor = this;
+        var promise = new Constructor(lib$es6$promise$$internal$$noop);
+        lib$es6$promise$$internal$$reject(promise, reason);
+        return promise;
     }
     var lib$es6$promise$promise$reject$$default = lib$es6$promise$promise$reject$$reject;
 
     var lib$es6$promise$promise$$counter = 0;
 
     function lib$es6$promise$promise$$needsResolver() {
-      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
+        throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
     }
 
     function lib$es6$promise$promise$$needsNew() {
-      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
+        throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
     }
 
     var lib$es6$promise$promise$$default = lib$es6$promise$promise$$Promise;
@@ -5543,22 +5543,22 @@
       @constructor
     */
     function lib$es6$promise$promise$$Promise(resolver) {
-      this._id = lib$es6$promise$promise$$counter++;
-      this._state = undefined;
-      this._result = undefined;
-      this._subscribers = [];
+        this._id = lib$es6$promise$promise$$counter++;
+        this._state = undefined;
+        this._result = undefined;
+        this._subscribers = [];
 
-      if (lib$es6$promise$$internal$$noop !== resolver) {
-        if (!lib$es6$promise$utils$$isFunction(resolver)) {
-          lib$es6$promise$promise$$needsResolver();
+        if (lib$es6$promise$$internal$$noop !== resolver) {
+            if (!lib$es6$promise$utils$$isFunction(resolver)) {
+                lib$es6$promise$promise$$needsResolver();
+            }
+
+            if (!(this instanceof lib$es6$promise$promise$$Promise)) {
+                lib$es6$promise$promise$$needsNew();
+            }
+
+            lib$es6$promise$$internal$$initializePromise(this, resolver);
         }
-
-        if (!(this instanceof lib$es6$promise$promise$$Promise)) {
-          lib$es6$promise$promise$$needsNew();
-        }
-
-        lib$es6$promise$$internal$$initializePromise(this, resolver);
-      }
     }
 
     lib$es6$promise$promise$$Promise.all = lib$es6$promise$promise$all$$default;
@@ -5570,292 +5570,292 @@
     lib$es6$promise$promise$$Promise._asap = lib$es6$promise$asap$$asap;
 
     lib$es6$promise$promise$$Promise.prototype = {
-      constructor: lib$es6$promise$promise$$Promise,
+        constructor: lib$es6$promise$promise$$Promise,
 
-    /**
-      The primary way of interacting with a promise is through its `then` method,
-      which registers callbacks to receive either a promise's eventual value or the
-      reason why the promise cannot be fulfilled.
-
-      ```js
-      findUser().then(function(user){
-        // user is available
-      }, function(reason){
-        // user is unavailable, and you are given the reason why
-      });
-      ```
-
-      Chaining
-      --------
-
-      The return value of `then` is itself a promise.  This second, 'downstream'
-      promise is resolved with the return value of the first promise's fulfillment
-      or rejection handler, or rejected if the handler throws an exception.
-
-      ```js
-      findUser().then(function (user) {
-        return user.name;
-      }, function (reason) {
-        return 'default name';
-      }).then(function (userName) {
-        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
-        // will be `'default name'`
-      });
-
-      findUser().then(function (user) {
-        throw new Error('Found user, but still unhappy');
-      }, function (reason) {
-        throw new Error('`findUser` rejected and we're unhappy');
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
-        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
-      });
-      ```
-      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
-
-      ```js
-      findUser().then(function (user) {
-        throw new PedagogicalException('Upstream error');
-      }).then(function (value) {
-        // never reached
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // The `PedgagocialException` is propagated all the way down to here
-      });
-      ```
-
-      Assimilation
-      ------------
-
-      Sometimes the value you want to propagate to a downstream promise can only be
-      retrieved asynchronously. This can be achieved by returning a promise in the
-      fulfillment or rejection handler. The downstream promise will then be pending
-      until the returned promise is settled. This is called *assimilation*.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // The user's comments are now available
-      });
-      ```
-
-      If the assimliated promise rejects, then the downstream promise will also reject.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // If `findCommentsByAuthor` fulfills, we'll have the value here
-      }, function (reason) {
-        // If `findCommentsByAuthor` rejects, we'll have the reason here
-      });
-      ```
-
-      Simple Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var result;
-
-      try {
-        result = findResult();
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-      findResult(function(result, err){
-        if (err) {
-          // failure
-        } else {
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findResult().then(function(result){
-        // success
-      }, function(reason){
-        // failure
-      });
-      ```
-
-      Advanced Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var author, books;
-
-      try {
-        author = findAuthor();
-        books  = findBooksByAuthor(author);
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-
-      function foundBooks(books) {
-
-      }
-
-      function failure(reason) {
-
-      }
-
-      findAuthor(function(author, err){
-        if (err) {
-          failure(err);
-          // failure
-        } else {
-          try {
-            findBoooksByAuthor(author, function(books, err) {
-              if (err) {
-                failure(err);
-              } else {
-                try {
-                  foundBooks(books);
-                } catch(reason) {
-                  failure(reason);
-                }
-              }
-            });
-          } catch(error) {
-            failure(err);
-          }
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findAuthor().
-        then(findBooksByAuthor).
-        then(function(books){
-          // found books
-      }).catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method then
-      @param {Function} onFulfilled
-      @param {Function} onRejected
-      Useful for tooling.
-      @return {Promise}
-    */
-      then: function(onFulfillment, onRejection) {
-        var parent = this;
-        var state = parent._state;
-
-        if (state === lib$es6$promise$$internal$$FULFILLED && !onFulfillment || state === lib$es6$promise$$internal$$REJECTED && !onRejection) {
-          return this;
-        }
-
-        var child = new this.constructor(lib$es6$promise$$internal$$noop);
-        var result = parent._result;
-
-        if (state) {
-          var callback = arguments[state - 1];
-          lib$es6$promise$asap$$asap(function(){
-            lib$es6$promise$$internal$$invokeCallback(state, child, callback, result);
+        /**
+          The primary way of interacting with a promise is through its `then` method,
+          which registers callbacks to receive either a promise's eventual value or the
+          reason why the promise cannot be fulfilled.
+    
+          ```js
+          findUser().then(function(user){
+            // user is available
+          }, function(reason){
+            // user is unavailable, and you are given the reason why
           });
-        } else {
-          lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection);
+          ```
+    
+          Chaining
+          --------
+    
+          The return value of `then` is itself a promise.  This second, 'downstream'
+          promise is resolved with the return value of the first promise's fulfillment
+          or rejection handler, or rejected if the handler throws an exception.
+    
+          ```js
+          findUser().then(function (user) {
+            return user.name;
+          }, function (reason) {
+            return 'default name';
+          }).then(function (userName) {
+            // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
+            // will be `'default name'`
+          });
+    
+          findUser().then(function (user) {
+            throw new Error('Found user, but still unhappy');
+          }, function (reason) {
+            throw new Error('`findUser` rejected and we're unhappy');
+          }).then(function (value) {
+            // never reached
+          }, function (reason) {
+            // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
+            // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
+          });
+          ```
+          If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
+    
+          ```js
+          findUser().then(function (user) {
+            throw new PedagogicalException('Upstream error');
+          }).then(function (value) {
+            // never reached
+          }).then(function (value) {
+            // never reached
+          }, function (reason) {
+            // The `PedgagocialException` is propagated all the way down to here
+          });
+          ```
+    
+          Assimilation
+          ------------
+    
+          Sometimes the value you want to propagate to a downstream promise can only be
+          retrieved asynchronously. This can be achieved by returning a promise in the
+          fulfillment or rejection handler. The downstream promise will then be pending
+          until the returned promise is settled. This is called *assimilation*.
+    
+          ```js
+          findUser().then(function (user) {
+            return findCommentsByAuthor(user);
+          }).then(function (comments) {
+            // The user's comments are now available
+          });
+          ```
+    
+          If the assimliated promise rejects, then the downstream promise will also reject.
+    
+          ```js
+          findUser().then(function (user) {
+            return findCommentsByAuthor(user);
+          }).then(function (comments) {
+            // If `findCommentsByAuthor` fulfills, we'll have the value here
+          }, function (reason) {
+            // If `findCommentsByAuthor` rejects, we'll have the reason here
+          });
+          ```
+    
+          Simple Example
+          --------------
+    
+          Synchronous Example
+    
+          ```javascript
+          var result;
+    
+          try {
+            result = findResult();
+            // success
+          } catch(reason) {
+            // failure
+          }
+          ```
+    
+          Errback Example
+    
+          ```js
+          findResult(function(result, err){
+            if (err) {
+              // failure
+            } else {
+              // success
+            }
+          });
+          ```
+    
+          Promise Example;
+    
+          ```javascript
+          findResult().then(function(result){
+            // success
+          }, function(reason){
+            // failure
+          });
+          ```
+    
+          Advanced Example
+          --------------
+    
+          Synchronous Example
+    
+          ```javascript
+          var author, books;
+    
+          try {
+            author = findAuthor();
+            books  = findBooksByAuthor(author);
+            // success
+          } catch(reason) {
+            // failure
+          }
+          ```
+    
+          Errback Example
+    
+          ```js
+    
+          function foundBooks(books) {
+    
+          }
+    
+          function failure(reason) {
+    
+          }
+    
+          findAuthor(function(author, err){
+            if (err) {
+              failure(err);
+              // failure
+            } else {
+              try {
+                findBoooksByAuthor(author, function(books, err) {
+                  if (err) {
+                    failure(err);
+                  } else {
+                    try {
+                      foundBooks(books);
+                    } catch(reason) {
+                      failure(reason);
+                    }
+                  }
+                });
+              } catch(error) {
+                failure(err);
+              }
+              // success
+            }
+          });
+          ```
+    
+          Promise Example;
+    
+          ```javascript
+          findAuthor().
+            then(findBooksByAuthor).
+            then(function(books){
+              // found books
+          }).catch(function(reason){
+            // something went wrong
+          });
+          ```
+    
+          @method then
+          @param {Function} onFulfilled
+          @param {Function} onRejected
+          Useful for tooling.
+          @return {Promise}
+        */
+        then: function (onFulfillment, onRejection) {
+            var parent = this;
+            var state = parent._state;
+
+            if (state === lib$es6$promise$$internal$$FULFILLED && !onFulfillment || state === lib$es6$promise$$internal$$REJECTED && !onRejection) {
+                return this;
+            }
+
+            var child = new this.constructor(lib$es6$promise$$internal$$noop);
+            var result = parent._result;
+
+            if (state) {
+                var callback = arguments[state - 1];
+                lib$es6$promise$asap$$asap(function () {
+                    lib$es6$promise$$internal$$invokeCallback(state, child, callback, result);
+                });
+            } else {
+                lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection);
+            }
+
+            return child;
+        },
+
+        /**
+          `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
+          as the catch block of a try/catch statement.
+    
+          ```js
+          function findAuthor(){
+            throw new Error('couldn't find that author');
+          }
+    
+          // synchronous
+          try {
+            findAuthor();
+          } catch(reason) {
+            // something went wrong
+          }
+    
+          // async with promises
+          findAuthor().catch(function(reason){
+            // something went wrong
+          });
+          ```
+    
+          @method catch
+          @param {Function} onRejection
+          Useful for tooling.
+          @return {Promise}
+        */
+        'catch': function (onRejection) {
+            return this.then(null, onRejection);
         }
-
-        return child;
-      },
-
-    /**
-      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
-      as the catch block of a try/catch statement.
-
-      ```js
-      function findAuthor(){
-        throw new Error('couldn't find that author');
-      }
-
-      // synchronous
-      try {
-        findAuthor();
-      } catch(reason) {
-        // something went wrong
-      }
-
-      // async with promises
-      findAuthor().catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method catch
-      @param {Function} onRejection
-      Useful for tooling.
-      @return {Promise}
-    */
-      'catch': function(onRejection) {
-        return this.then(null, onRejection);
-      }
     };
     function lib$es6$promise$polyfill$$polyfill() {
-      var local;
+        var local;
 
-      if (typeof global !== 'undefined') {
-          local = global;
-      } else if (typeof self !== 'undefined') {
-          local = self;
-      } else {
-          try {
-              local = Function('return this')();
-          } catch (e) {
-              throw new Error('polyfill failed because global object is unavailable in this environment');
-          }
-      }
+        if (typeof global !== 'undefined') {
+            local = global;
+        } else if (typeof self !== 'undefined') {
+            local = self;
+        } else {
+            try {
+                local = Function('return this')();
+            } catch (e) {
+                throw new Error('polyfill failed because global object is unavailable in this environment');
+            }
+        }
 
-      var P = local.Promise;
+        var P = local.Promise;
 
-      if (P && Object.prototype.toString.call(P.resolve()) === '[object Promise]' && !P.cast) {
-        return;
-      }
+        if (P && Object.prototype.toString.call(P.resolve()) === '[object Promise]' && !P.cast) {
+            return;
+        }
 
-      local.Promise = lib$es6$promise$promise$$default;
+        local.Promise = lib$es6$promise$promise$$default;
     }
     var lib$es6$promise$polyfill$$default = lib$es6$promise$polyfill$$polyfill;
 
     var lib$es6$promise$umd$$ES6Promise = {
-      'Promise': lib$es6$promise$promise$$default,
-      'polyfill': lib$es6$promise$polyfill$$default
+        'Promise': lib$es6$promise$promise$$default,
+        'polyfill': lib$es6$promise$polyfill$$default
     };
 
     /* global define:true module:true window: true */
     if (typeof define === 'function' && define['amd']) {
-        define('ES6Promise',function() { return lib$es6$promise$umd$$ES6Promise; });
+        define('ES6Promise', function () { return lib$es6$promise$umd$$ES6Promise; });
     } else if (typeof module !== 'undefined' && module['exports']) {
-      module['exports'] = lib$es6$promise$umd$$ES6Promise;
+        module['exports'] = lib$es6$promise$umd$$ES6Promise;
     } else if (typeof this !== 'undefined') {
-      this['ES6Promise'] = lib$es6$promise$umd$$ES6Promise;
+        this['ES6Promise'] = lib$es6$promise$umd$$ES6Promise;
     }
 
     lib$es6$promise$polyfill$$default();
@@ -5906,7 +5906,7 @@
     return core;
 });
 ;
-(function(factory) {
+(function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('WebSdkCore.utils', [
@@ -5916,7 +5916,7 @@
         if (!window.WebSdkCore)
             throw new Error("WebSdkCore is not loaded.");
 
-      window.WebSdkCore.utils = factory(window.WebSdkCore);
+        window.WebSdkCore.utils = factory(window.WebSdkCore);
     }
 })(function (core) {
 
@@ -6054,7 +6054,7 @@
         FixedQueue: FixedQueue
     };
 });
-;(function (factory) {
+; (function (factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('WebSdkCore.configurator', [
@@ -6250,8 +6250,7 @@
         return { version: version, type: type, length: length, offset: offset };
     }
 
-    function setHdr(buf, type)
-    {
+    function setHdr(buf, type) {
         var dv = new DataView(buf);
         // set version
         dv.setUint8(0, WebSdkAESVersion);
@@ -6287,7 +6286,7 @@
         return buf;
     }
     function binary2ab(bin) {
-        var buf = new ArrayBuffer(bin.length + 8); 
+        var buf = new ArrayBuffer(bin.length + 8);
         setHdr(buf, WebSdkAESDataType.Binary); // binary string
         var bufSrc = new Uint8Array(bin);
         var bufDest = new Uint8Array(buf, 8);
@@ -6306,29 +6305,29 @@
         var extractable = false;
 
         return crypt.subtle.importKey(
-          'raw'
-        , rawKey
-        , { name: 'AES-CBC' }
-        , extractable
-        , usages
+            'raw'
+            , rawKey
+            , { name: 'AES-CBC' }
+            , extractable
+            , usages
         );
     }
 
     function encrypt(data, key, iv) {
         // a public value that should be generated for changes each time
         return crypt.subtle.encrypt(
-          { name: 'AES-CBC', iv: iv }
-        , key
-        , data
+            { name: 'AES-CBC', iv: iv }
+            , key
+            , data
         );
     };
 
     function decrypt(data, key, iv) {
         // a public value that should be generated for changes each time
         return crypt.subtle.decrypt(
-          { name: 'AES-CBC', iv: iv }
-        , key
-        , data
+            { name: 'AES-CBC', iv: iv }
+            , key
+            , data
         );
     };
 
@@ -6338,11 +6337,11 @@
         return new window.Promise(function (resolve, reject) {
 
             var keyOpp = crypt.subtle.importKey(
-              'raw'
-            , rawKey
-            , { name: 'AES-CBC' }
-            , extractable
-            , usages
+                'raw'
+                , rawKey
+                , { name: 'AES-CBC' }
+                , extractable
+                , usages
             );
             keyOpp.oncomplete = function (e) {
                 resolve(keyOpp.result);
@@ -6359,9 +6358,9 @@
         return new window.Promise(function (resolve, reject) {
             // a public value that should be generated for changes each time
             var encOpp = crypt.subtle.encrypt(
-              { name: 'AES-CBC', iv: iv }
-            , key
-            , data
+                { name: 'AES-CBC', iv: iv }
+                , key
+                , data
             );
             encOpp.oncomplete = function (e) {
                 resolve(encOpp.result);
@@ -6376,9 +6375,9 @@
         return new window.Promise(function (resolve, reject) {
             // a public value that should be generated for changes each time
             var decOpp = crypt.subtle.decrypt(
-              { name: 'AES-CBC', iv: iv }
-            , key
-            , data
+                { name: 'AES-CBC', iv: iv }
+                , key
+                , data
             );
             decOpp.oncomplete = function (e) {
                 resolve(decOpp.result);
@@ -6484,7 +6483,7 @@
         isCryptoSupported: function () {
             return ((typeof crypt !== 'undefined') && crypt.subtle && crypt.subtle.importKey && crypt.subtle.encrypt);
         },
-        hexToBytes: function(hex) {
+        hexToBytes: function (hex) {
             return hexToArray(hex);
         }
     };
@@ -6542,7 +6541,7 @@
         }
     }
     return WebChannelOptions;
- 
+
 });
 
 ; (function (factory) {
@@ -6612,7 +6611,7 @@
 
     }
 
-    WebChannelClientImpl.prototype.notifyFocusChanged = function(isFocused) {
+    WebChannelClientImpl.prototype.notifyFocusChanged = function (isFocused) {
         if (!this.isConnected()) return;
 
         core.log('WebChannelClientImpl: notifyFocusChanged ->', isFocused);
@@ -6624,7 +6623,7 @@
 
         this.sendData(JSON.stringify(data));
     }
-    WebChannelClientImpl.prototype.fireConnectionFailed = function() {
+    WebChannelClientImpl.prototype.fireConnectionFailed = function () {
         if (window.parent.parent.document.hasFocus()) {
             this.setReconnectTimer();
         }
@@ -6634,24 +6633,24 @@
         }
     };
 
-    WebChannelClientImpl.prototype.fireConnectionSucceed = function() {
+    WebChannelClientImpl.prototype.fireConnectionSucceed = function () {
         if (this.onConnectionSucceed) {
             this.onConnectionSucceed();
         }
     };
 
-    WebChannelClientImpl.prototype.resetReconnectTimer = function() {
+    WebChannelClientImpl.prototype.resetReconnectTimer = function () {
         if (this.reconnectTimer) {
             clearInterval(this.reconnectTimer);
             this.reconnectTimer = null;
         }
     }
 
-    WebChannelClientImpl.prototype.setReconnectTimer = function() {
+    WebChannelClientImpl.prototype.setReconnectTimer = function () {
         this.resetReconnectTimer();
 
         var self = this;
-        this.reconnectTimer = setInterval(function() {
+        this.reconnectTimer = setInterval(function () {
             self.connectInternal(false);
         }, this.wsReconnectInterval);
     }
@@ -6659,7 +6658,7 @@
     /**
     * Connects to web socket server and setups all event listeners
     */
-    WebChannelClientImpl.prototype.wsconnect = function(url) {
+    WebChannelClientImpl.prototype.wsconnect = function (url) {
         core.log("WebChannelClientImpl: wsconnect " + url);
         var self = this;
 
@@ -6672,25 +6671,25 @@
         this.webSocket.binaryType = 'arraybuffer';
 
 
-        this.webSocket.onclose = function(event) {
+        this.webSocket.onclose = function (event) {
             core.log("WebChannelClientImpl: wsonclose");
             return self.wsonclose(true);
         };
-        this.webSocket.onopen = function(event) {
+        this.webSocket.onopen = function (event) {
             core.log("WebChannelClientImpl: wsonopen");
             $q.resolve();
 
             if (window.parent.parent.document.hasFocus()) {
                 self.notifyFocusChanged(true);
-            }else{
+            } else {
                 self.notifyFocusChanged(false);
             }
         };
-        this.webSocket.onerror = function(event) {
+        this.webSocket.onerror = function (event) {
             core.log("WebChannelClientImpl: wsonerror " + arguments);
             return $q.reject(new Error("WebSocket connection failed."));
         };
-        this.webSocket.onmessage = function(event) {
+        this.webSocket.onmessage = function (event) {
             return self.wsonmessage(event);
         };
 
@@ -6700,14 +6699,14 @@
     /**
     * Closes web socket connection and cleans up all event listeners
     */
-    WebChannelClientImpl.prototype.wsdisconnect = function() {
+    WebChannelClientImpl.prototype.wsdisconnect = function () {
         var self = this;
         var $q = utils.Deferred();
 
         if (!this.webSocket || this.webSocket.readyState !== WebSocket.OPEN) {
             $q.resolve();
         } else {
-            this.webSocket.onclose = function(event) {
+            this.webSocket.onclose = function (event) {
                 self.wsonclose(false);
                 $q.resolve();
             };
@@ -6717,7 +6716,7 @@
         return $q.promise;
     };
 
-    WebChannelClientImpl.prototype.wsonclose = function(isFailed) {
+    WebChannelClientImpl.prototype.wsonclose = function (isFailed) {
         core.log("WebChannelClientImpl: connection closed");
 
         this.webSocket.onclose = null;
@@ -6732,7 +6731,7 @@
         }
     };
 
-    WebChannelClientImpl.prototype.wsonmessage = function(event) {
+    WebChannelClientImpl.prototype.wsonmessage = function (event) {
         var self = this;
         cipher.decode(this.sessionKey, this.M1, event.data).then(function (data) {
             if (typeof data === 'string') {
@@ -6750,7 +6749,7 @@
     /**
     * Sends data over web socket
     */
-    WebChannelClientImpl.prototype.wssend = function(data) {
+    WebChannelClientImpl.prototype.wssend = function (data) {
         if (!this.isConnected())
             return false;
 
@@ -6763,7 +6762,7 @@
         return true;
     };
 
-    WebChannelClientImpl.prototype.generateSessionKey = function(callback) {
+    WebChannelClientImpl.prototype.generateSessionKey = function (callback) {
         var srpData = configurator.srp;
         if (!srpData.p1 || !srpData.p2 || !srpData.salt)
             return callback(new Error("No data available for authentication"));
@@ -6808,16 +6807,16 @@
     /**
     * Sets up connection with parameters from configurator (generates session key and connects to websocket server).
     */
-    WebChannelClientImpl.prototype.setupSecureChannel = function(callback) {
+    WebChannelClientImpl.prototype.setupSecureChannel = function (callback) {
         core.log('WebChannelClientImpl.setupSecureChannel');
 
         var self = this;
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 self.generateSessionKey(callback);
             },
-            function(sessionKey, callback) {
-               // self.sessionKey = sessionKey;
+            function (sessionKey, callback) {
+                // self.sessionKey = sessionKey;
 
                 var connectionUrl = configurator.url.replace('http', 'ws') +
                     '/' + self.clientPath +
@@ -6834,10 +6833,10 @@
                 connectionUrl += "&version=" + core.WebSdk.version.toString();
 
                 self.wsconnect(connectionUrl)
-                    .then(function() {
+                    .then(function () {
                         callback(null);
                     })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         core.log(err);
                         callback(err);
                     });
@@ -6848,7 +6847,7 @@
     /**
     * @result {boolean} True if web socket is ready for transferring data
     */
-    WebChannelClientImpl.prototype.isConnected = function() {
+    WebChannelClientImpl.prototype.isConnected = function () {
         return !!this.webSocket && this.webSocket.readyState === WebSocket.OPEN;
     };
 
@@ -6856,23 +6855,23 @@
     * Sends message if channel is ready
     * Otherwise, adds message to the queue.
     */
-    WebChannelClientImpl.prototype.sendData = function(data) {
+    WebChannelClientImpl.prototype.sendData = function (data) {
         if (!this.wssend(data)) {
             this.queue.push(data);
         }
     };
-    WebChannelClientImpl.prototype.deactivateBufferCheck = function() {
+    WebChannelClientImpl.prototype.deactivateBufferCheck = function () {
         if (!this.queueInterval) return;
 
         clearInterval(this.queueInterval);
         this.queueInterval = null;
     };
 
-    WebChannelClientImpl.prototype.activateBufferCheck = function() {
+    WebChannelClientImpl.prototype.activateBufferCheck = function () {
         if (this.queueInterval) return;
 
         var self = this;
-        this.queueInterval = setInterval(function() {
+        this.queueInterval = setInterval(function () {
             self.processMessageQueue();
 
             if (self.queue.length === 0) {
@@ -6884,7 +6883,7 @@
     /**
     * Sends messages from a queue if any. Initiates secure connection if needed and has not been yet initiated.
     */
-    WebChannelClientImpl.prototype.processMessageQueue = function() {
+    WebChannelClientImpl.prototype.processMessageQueue = function () {
         core.log("WebChannelClientImpl: processMessageQueue " + this.queue.length);
         if (this.queue.length === 0)
             return;
@@ -6895,22 +6894,22 @@
         }
     };
 
-    WebChannelClientImpl.prototype.connectInternal = function(multipleAttempts) {
+    WebChannelClientImpl.prototype.connectInternal = function (multipleAttempts) {
         core.log('WebChannelClientImpl.connectInternal');
 
         this.resetReconnectTimer();
 
         var self = this;
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 configurator.ensureLoaded(callback);
             },
-            function(callback) {
-                async.retry(multipleAttempts ? 3 : 1, function() {
+            function (callback) {
+                async.retry(multipleAttempts ? 3 : 1, function () {
                     self.setupSecureChannel(callback);
                 }, callback);
             }
-        ], function(err) {
+        ], function (err) {
             if (err) return self.fireConnectionFailed();
 
             self.fireConnectionSucceed();
@@ -6918,11 +6917,11 @@
         });
     };
 
-    WebChannelClientImpl.prototype.connect = function() {
+    WebChannelClientImpl.prototype.connect = function () {
         this.connectInternal(true);
     };
 
-    WebChannelClientImpl.prototype.disconnect = function() {
+    WebChannelClientImpl.prototype.disconnect = function () {
         this.wsdisconnect();
     };
 
@@ -6933,7 +6932,7 @@
         });
     };
 
-    WebChannelClientImpl.prototype.sendDataTxt = function(data) {
+    WebChannelClientImpl.prototype.sendDataTxt = function (data) {
         var self = this;
         cipher.encode(this.sessionKey, this.M1, data).then(function (data) {
             self.sendData(data);
@@ -6944,20 +6943,20 @@
 });
 
 ; (function (factory) {
-	'use strict';
+    'use strict';
 
-	if (typeof define === 'function' && define.amd) {
-		define('WebSdkCore.channelClient', [
+    if (typeof define === 'function' && define.amd) {
+        define('WebSdkCore.channelClient', [
             'WebSdkCore',
             'WebSdkCore.channelOptions',
             'WebSdkCore.channelClientImplementation'
-		], factory);
-	} else {
-		var core = window.WebSdkCore;
-		if (!core)
-			throw new Error("WebSdkCore is not loaded.");
+        ], factory);
+    } else {
+        var core = window.WebSdkCore;
+        if (!core)
+            throw new Error("WebSdkCore is not loaded.");
 
-		window.WebSdkCore.channelClient = factory(core, core.channelOptions, core.channelClientImplementation);
+        window.WebSdkCore.channelClient = factory(core, core.channelOptions, core.channelClientImplementation);
     }
 })(function (core, WebChannelOptions, WebChannelClientImpl) {
 
